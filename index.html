@@ -1,0 +1,2094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0033A0">
+<title>PC Express Pulse — Live polls, quiz & Q&A</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+:root{
+  --bg:#f4f6f9; --card:#ffffff; --ink:#0f1720; --muted:#6b7580;
+  --line:#e3e8ee; --brand:#E31E24; --brand-dk:#B8141A; --brand-soft:#FCE8E9;
+  --pc-blue:#0033A0; --pc-blue-soft:#E6ECF8; --pc-blue-dk:#002270;
+  --ok:#0a8a6e; --ok-soft:#E4F8F1;
+  --radius:12px;
+  --shadow:0 2px 4px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.06);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;
+  font-size:16px;line-height:1.4}
+h1,h2,h3{margin:0;letter-spacing:-.02em}
+button{font:inherit}
+::selection{background:#FCE8E9;color:#B8141A}
+body.display-mode{background:#001a4d;overflow-x:hidden}
+body.display-mode .topbar, body.display-mode .subnav{display:none}
+body.invite-mode .topbar, body.invite-mode .subnav{display:none}
+body.invite-mode{background:#f4f6f9}
+.topbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:12px;
+  padding:10px 16px;background:rgba(255,255,255,.95);backdrop-filter:saturate(180%) blur(14px);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);border-bottom:3px solid var(--pc-blue);flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:8px;font-weight:900;font-size:clamp(15px,2.2vw,19px);
+  letter-spacing:-.04em;font-style:italic}
+.logo{width:30px;height:30px;border-radius:6px;background:linear-gradient(135deg,var(--brand) 0%,var(--brand-dk) 100%);
+  display:grid;place-items:center;color:#fff;box-shadow:0 4px 10px rgba(227,30,36,.3);transform:skew(-6deg);flex:none}
+.logo svg{width:16px;height:16px;display:block;transform:skew(6deg)}
+.brand-text{color:var(--pc-blue);text-transform:uppercase;white-space:nowrap}
+.brand-text span{color:var(--brand)}
+.room{margin-left:auto;display:flex;align-items:center;gap:8px;padding:4px 5px 4px 12px;
+  border-radius:6px;background:#F0F2F5;border:1px solid var(--line)}
+.room-label{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--pc-blue)}
+.room-code{border:0;background:#fff;border-radius:4px;padding:5px 10px;cursor:pointer;
+  font-weight:900;font-size:clamp(12px,1.6vw,14px);letter-spacing:.1em;color:var(--brand);
+  box-shadow:0 1px 2px rgba(0,0,0,.07);transition:.15s;min-height:32px}
+.room-code:hover{background:var(--brand);color:#fff}
+.seg{display:flex;background:#E6ECF8;border-radius:6px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:7px 12px;border-radius:4px;font-size:12px;font-weight:700;
+  color:var(--pc-blue);cursor:pointer;transition:.16s;text-transform:uppercase;letter-spacing:.02em;min-height:34px}
+.seg button.active{background:var(--pc-blue);color:#fff;box-shadow:0 2px 4px rgba(0,51,160,.2)}
+.lock-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;
+  background:var(--brand-soft);color:var(--brand-dk);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
+.sync-dot{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;
+  background:#F0F2F5;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.sync-dot .b{width:8px;height:8px;border-radius:50%;background:#94A3B8;transition:.3s}
+.sync-dot.live{color:var(--ok);background:var(--ok-soft)}
+.sync-dot.live .b{background:var(--ok);animation:pulse 1.6s infinite}
+.subnav{display:flex;gap:6px;padding:10px 16px 0;max-width:1400px;margin:0 auto;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.subnav button{border:0;background:transparent;padding:10px 16px;border-radius:8px 8px 0 0;
+  font-size:clamp(12px,1.6vw,14px);font-weight:800;color:var(--pc-blue);cursor:pointer;transition:.15s;
+  text-transform:uppercase;letter-spacing:.03em;position:relative;display:flex;align-items:center;gap:8px;white-space:nowrap;min-height:42px}
+.subnav button:hover{background:#EEF2FA}
+.subnav button.active{background:#fff;border:1px solid var(--line);border-bottom-color:#fff;color:var(--brand);
+  box-shadow:0 -2px 0 var(--brand) inset}
+.subnav .dot{width:8px;height:8px;border-radius:50%;background:var(--brand);animation:pulse 1.6s infinite}
+.layout{display:grid;grid-template-columns:minmax(240px,340px) minmax(0,1fr);gap:16px;
+  padding:0 16px 16px;max-width:1400px;margin:0 auto;align-items:start}
+.page.narrow{max-width:820px;margin:0 auto;padding:0 16px 16px;display:flex;flex-direction:column;gap:16px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:0 var(--radius) var(--radius) var(--radius);box-shadow:var(--shadow)}
+.panel.pad{padding:clamp(16px,2.5vw,24px);border-radius:var(--radius)}
+.side{overflow:hidden;border-top:4px solid var(--brand);border-radius:var(--radius)}
+.side-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);gap:8px;flex-wrap:wrap}
+.side-head h2{font-size:14px;font-weight:800;color:var(--pc-blue);text-transform:uppercase;letter-spacing:.02em}
+.section-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.section-head h2{font-size:clamp(16px,2vw,18px);font-weight:800;color:var(--pc-blue)}
+.pill{margin-left:auto;font-size:11px;font-weight:800;color:#fff;background:var(--brand);
+  padding:5px 11px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.pill.blue{background:var(--pc-blue)}
+.btn{border:0;border-radius:6px;padding:10px 16px;font-size:13px;font-weight:800;cursor:pointer;
+  transition:.16s;white-space:nowrap;text-transform:uppercase;letter-spacing:.03em;min-height:42px;touch-action:manipulation}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-sm{padding:8px 13px;font-size:12px;border-radius:4px;min-height:36px}
+.btn-primary{background:var(--brand);color:#fff;box-shadow:0 3px 8px rgba(227,30,36,.25)}
+.btn-primary:hover:not(:disabled){background:var(--brand-dk)}
+.btn-blue{background:var(--pc-blue);color:#fff;box-shadow:0 3px 8px rgba(0,51,160,.25)}
+.btn-blue:hover:not(:disabled){background:var(--pc-blue-dk)}
+.btn-ok{background:var(--ok);color:#fff}
+.btn-ok:hover:not(:disabled){background:#076b56}
+.btn-lg{padding:14px 22px;font-size:15px;min-height:52px;border-radius:8px}
+.btn-ghost{background:#F0F2F5;color:var(--pc-blue);border:1px solid var(--line)}
+.btn-ghost:hover:not(:disabled){background:#E6ECF8}
+.btn-ghost.danger{color:var(--brand)}
+.btn-ghost.danger:hover{background:var(--brand-soft);border-color:#f7cdce}
+.icon-btn{border:0;background:transparent;width:36px;height:36px;border-radius:6px;cursor:pointer;
+  color:var(--muted);font-size:15px;display:grid;place-items:center;transition:.15s}
+.icon-btn:hover{background:#E6ECF8;color:var(--pc-blue)}
+.icon-btn.danger:hover{background:var(--brand-soft);color:var(--brand)}
+.poll-list{padding:10px;display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow:auto;-webkit-overflow-scrolling:touch}
+.poll-item{text-align:left;border:1.5px solid transparent;background:#F8FAFC;border-radius:8px;
+  padding:12px;cursor:pointer;transition:.15s;display:flex;flex-direction:column;gap:8px;width:100%}
+.poll-item:hover{background:#F0F4F8;border-color:#D1D9E6}
+.poll-item.selected{background:var(--pc-blue-soft);border-color:var(--pc-blue)}
+.poll-item-q{font-size:13px;font-weight:700;line-height:1.35;color:var(--ink);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.poll-item-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.muted-sm{font-size:11px;color:var(--muted);font-weight:700}
+.badge{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+  background:#E6ECF8;color:var(--pc-blue);padding:4px 8px;border-radius:4px}
+.status{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+  padding:4px 8px;border-radius:4px;display:inline-flex;align-items:center;gap:5px}
+.status.draft{background:#F0F2F5;color:#7A848F}
+.status.live{background:var(--brand-soft);color:var(--brand)}
+.status.live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--brand);animation:pulse 1.6s infinite}
+.status.closed{background:var(--pc-blue-soft);color:var(--pc-blue)}
+.status.idle{background:#F0F2F5;color:#7A848F}
+.status.active{background:var(--brand-soft);color:var(--brand)}
+.status.active::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--brand);animation:pulse 1.6s infinite}
+.status.revealed{background:var(--ok-soft);color:var(--ok)}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
+.stage{padding:clamp(18px,3vw,30px);min-height:480px;display:flex;flex-direction:column}
+.stage-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.stage-head .spacer{flex:1}
+.stage-q{font-size:clamp(20px,3vw,30px);font-weight:900;line-height:1.2;margin-bottom:6px;color:var(--pc-blue)}
+.stage-sub{font-size:13px;color:var(--muted);font-weight:700;margin-bottom:24px;text-transform:uppercase;letter-spacing:.04em}
+.results{display:flex;flex-direction:column;gap:14px;margin-top:auto}
+.bar{display:flex;flex-direction:column;gap:6px}
+.bar-top{display:flex;align-items:baseline;gap:10px;font-size:14px}
+.bar-label{font-weight:700;flex:1;min-width:0}
+.bar-val{font-weight:800;font-variant-numeric:tabular-nums;color:var(--pc-blue);font-size:13px}
+.bar-track{height:38px;background:#F0F2F5;border-radius:6px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--pc-blue),#1A5CFF);
+  transform-origin:left;animation:grow .5s cubic-bezier(.2,.85,.25,1)}
+.bar:nth-child(2) .bar-fill{background:linear-gradient(90deg,var(--brand),#FF4D4D)}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.avg{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+.avg strong{font-size:clamp(30px,4vw,40px);font-weight:900;letter-spacing:-.04em;color:var(--brand)}
+.avg span{font-size:13px;color:var(--muted);font-weight:700;text-transform:uppercase}
+.cloud{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;justify-content:center;
+  padding:30px 10px;min-height:220px}
+.cloud-word{font-weight:900;line-height:1;letter-spacing:-.03em;animation:popin .4s backwards;font-style:italic}
+@keyframes popin{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+.responses{display:flex;flex-direction:column;gap:10px;max-height:340px;overflow:auto;padding-right:4px}
+.response{background:#F8FAFC;border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+  font-size:14px;line-height:1.5;animation:popin .3s;font-weight:500}
+.empty{color:var(--muted);font-size:13.5px;text-align:center;padding:18px;font-weight:600}
+.empty-state{display:flex;flex-direction:column;align-items:center;gap:10px;padding:clamp(30px,6vw,60px) 20px;text-align:center}
+.empty-icon{font-size:clamp(32px,5vw,40px)}
+.empty-state p{margin:0;font-weight:800;font-size:15px;color:var(--pc-blue)}
+.empty-state span{font-size:13.5px;color:var(--muted);font-weight:500}
+.quiz-head{padding:16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.quiz-head h2{font-size:clamp(16px,2vw,18px);font-weight:900;color:var(--pc-blue);flex:1;min-width:0}
+.quiz-meta{display:flex;gap:14px;font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;flex-wrap:wrap}
+.quiz-meta b{color:var(--pc-blue)}
+.q-list{padding:10px;display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow:auto;-webkit-overflow-scrolling:touch}
+.q-list-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;cursor:pointer;
+  background:#F8FAFC;border:1.5px solid transparent;transition:.15s}
+.q-list-item:hover{background:#F0F4F8;border-color:#D1D9E6}
+.q-list-item.selected{background:var(--pc-blue-soft);border-color:var(--pc-blue)}
+.q-num{width:26px;height:26px;border-radius:6px;background:var(--pc-blue);color:#fff;
+  display:grid;place-items:center;font-size:12px;font-weight:900;flex:none}
+.q-list-item.revealed .q-num{background:var(--ok)}
+.q-list-item.active .q-num{background:var(--brand);animation:pulse 1.6s infinite}
+.q-text{flex:1;min-width:0;font-size:13px;font-weight:700;line-height:1.35;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.q-answered{font-size:11px;font-weight:800;color:var(--muted);white-space:nowrap}
+.quiz-stage{padding:clamp(18px,3vw,30px);display:flex;flex-direction:column;gap:20px;min-height:480px}
+.q-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.q-badge{background:var(--pc-blue);color:#fff;padding:6px 12px;border-radius:6px;
+  font-size:12.5px;font-weight:900;letter-spacing:.04em}
+.q-timer{display:flex;align-items:center;gap:8px;margin-left:auto}
+.timer-num{font-size:20px;font-weight:900;color:var(--pc-blue);font-variant-numeric:tabular-nums;min-width:48px;text-align:right}
+.timer-num.low{color:var(--brand)}
+.timer-bar-track{width:clamp(60px,10vw,120px);height:8px;background:#E6ECF8;border-radius:4px;overflow:hidden}
+.timer-bar{height:100%;background:var(--pc-blue);border-radius:4px;transition:width .25s linear}
+.timer-bar.low{background:var(--brand)}
+.q-answered-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;
+  background:var(--brand-soft);color:var(--brand-dk);font-size:12.5px;font-weight:800}
+.q-answered-pill .n{font-size:15px;font-weight:900}
+.quiz-question{font-size:clamp(20px,3.4vw,32px);font-weight:900;line-height:1.2;color:var(--ink)}
+.quiz-options{display:flex;flex-direction:column;gap:10px}
+.quiz-opt{display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:10px;
+  border:2px solid var(--line);background:#fff;transition:.2s;position:relative;overflow:hidden;min-height:56px;
+  pointer-events:auto;user-select:none;-webkit-user-select:none}
+.quiz-opt .opt-letter{width:32px;height:32px;border-radius:8px;background:var(--pc-blue-soft);color:var(--pc-blue);
+  display:grid;place-items:center;font-size:13px;font-weight:900;flex:none;z-index:1;transition:.2s}
+.quiz-opt .opt-text{flex:1;font-size:15px;font-weight:700;z-index:1;min-width:0}
+.quiz-opt .opt-count{font-size:14px;font-weight:900;color:var(--pc-blue);z-index:1;font-variant-numeric:tabular-nums}
+.quiz-opt .opt-bar{position:absolute;left:0;top:0;bottom:0;background:var(--pc-blue-soft);z-index:0;
+  transition:width .4s;pointer-events:none}
+.quiz-opt.correct{border-color:var(--ok);background:var(--ok-soft)}
+.quiz-opt.correct .opt-letter{background:var(--ok);color:#fff}
+.quiz-opt.correct .opt-bar{background:rgba(10,138,110,.15)}
+.quiz-opt.wrong{border-color:#f0b5b6;background:#fff5f5}
+.quiz-opt.wrong .opt-bar{background:rgba(227,30,36,.1)}
+.quiz-opt.mine{box-shadow:0 0 0 2px var(--brand) inset}
+.quiz-opt.pickable{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.quiz-opt.pickable:hover{border-color:var(--pc-blue);background:#F8FAFC}
+.quiz-opt.pickable:active{background:#EEF4FF}
+.quiz-opt.picked{border-color:var(--pc-blue);background:var(--pc-blue-soft);box-shadow:0 0 0 3px rgba(0,51,160,.18)}
+.quiz-opt.picked .opt-letter{background:var(--pc-blue);color:#fff}
+.quiz-opt.picked .opt-letter span{display:none}
+.quiz-opt.picked .opt-letter::before{content:'✓';font-weight:900;font-size:15px}
+.submit-row{display:flex;gap:12px;align-items:center;margin-top:6px;padding:14px 16px;
+  background:#F8FAFC;border:2px dashed var(--line);border-radius:10px;flex-wrap:wrap}
+.submit-row .hint{flex:1;min-width:160px;font-size:13.5px;font-weight:700;color:var(--muted)}
+.submit-row .hint b{color:var(--pc-blue)}
+.submit-row .btn{flex:none}
+.submit-row.locked{background:var(--brand-soft);border-style:solid;border-color:#F5C2C4}
+.submit-row.locked .hint{color:var(--brand-dk)}
+@media(max-width:480px){.submit-row{padding:12px}.submit-row .btn{width:100%}}
+.quiz-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.quiz-actions .spacer{flex:1}
+.winner-card{background:linear-gradient(135deg,#FFF8E6,#FFF1CC);border:2px solid #F5D97A;
+  border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.winner-card .trophy{font-size:30px}
+.winner-card .w-info{flex:1;min-width:0}
+.winner-card .w-title{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#8A6B00;margin-bottom:2px}
+.winner-card .w-name{font-size:clamp(16px,2vw,20px);font-weight:900;color:#5C4600;word-break:break-word}
+.winner-card .w-stats{font-size:12.5px;font-weight:700;color:#8A6B00;margin-top:2px}
+.winner-card .w-points{font-size:22px;font-weight:900;color:var(--brand)}
+.participant-pill{padding:9px 14px;background:var(--pc-blue-soft);border-radius:8px;font-size:12.5px;font-weight:800;color:var(--pc-blue)}
+.participant-pill b{color:var(--brand)}
+.lb{display:flex;flex-direction:column;gap:6px}
+.lb-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;background:#F8FAFC}
+.lb-row.you{background:var(--brand-soft);border:1px solid #F5C2C4}
+.lb-row.top1{background:linear-gradient(90deg,#FFF8E6,#FFF1CC);border:1px solid #F5D97A}
+.lb-rank{width:30px;height:30px;border-radius:8px;background:var(--pc-blue);color:#fff;
+  display:grid;place-items:center;font-size:12px;font-weight:900;flex:none}
+.lb-row.top1 .lb-rank{background:var(--brand)}
+.lb-name{flex:1;font-size:13.5px;font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-correct{font-size:11.5px;font-weight:800;color:var(--muted);white-space:nowrap}
+.lb-score{font-size:15px;font-weight:900;color:var(--pc-blue);font-variant-numeric:tabular-nums;white-space:nowrap}
+.lb-row.top1 .lb-score{color:var(--brand)}
+.poll-card{border:1px solid var(--line);border-radius:12px;padding:clamp(16px,2.5vw,22px);margin-bottom:14px;
+  background:#fff;animation:popin .3s;border-left:4px solid var(--brand)}
+.poll-card:last-child{margin-bottom:0}
+.poll-card-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.poll-card-q{font-size:clamp(16px,2.2vw,18px);font-weight:800;line-height:1.3;margin-bottom:16px;color:var(--pc-blue)}
+.options{display:flex;flex-direction:column;gap:8px}
+.option{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:2px solid var(--line);
+  background:#fff;border-radius:8px;padding:14px 16px;font-size:15px;font-weight:700;cursor:pointer;
+  transition:.16s;color:var(--ink);min-height:54px}
+.option:hover{border-color:var(--pc-blue);background:#F8FAFC}
+.option.chosen{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-dk)}
+.opt-mark{width:20px;height:20px;border-radius:50%;border:2px solid #CBD5E1;flex:none;transition:.16s}
+.option.chosen .opt-mark{border-color:var(--brand);background:var(--brand);box-shadow:inset 0 0 0 4px #fff}
+.rating-row{display:flex;gap:8px;flex-wrap:wrap}
+.rate-btn{flex:1;min-width:48px;aspect-ratio:1;max-width:68px;border:2px solid var(--line);background:#fff;
+  border-radius:8px;font-size:16px;font-weight:800;cursor:pointer;transition:.16s;color:var(--ink)}
+.rate-btn:hover{border-color:var(--pc-blue);background:#F8FAFC}
+.rate-btn.chosen{border-color:var(--brand);background:var(--brand);color:#fff}
+.rating-labels{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);
+  font-weight:700;margin-top:8px;max-width:360px;text-transform:uppercase}
+.ask-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.input{flex:1;min-width:0;border:2px solid var(--line);border-radius:8px;padding:12px 14px;
+  font:inherit;font-size:15px;background:#fff;color:var(--ink);transition:.16s;outline:none;font-weight:500;min-height:46px}
+.input:focus{border-color:var(--pc-blue);box-shadow:0 0 0 4px var(--pc-blue-soft)}
+textarea.input{resize:vertical;min-height:86px;line-height:1.5}
+.thanks{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:800;color:var(--brand-dk);
+  background:var(--brand-soft);padding:11px 16px;border-radius:8px;margin-bottom:14px;border:1px solid #F5C2C4}
+.mini-results{margin-top:6px}
+.qa-list{display:flex;flex-direction:column;gap:10px}
+.qa-item{display:flex;gap:14px;align-items:flex-start;padding:14px;border-radius:10px;
+  background:#F8FAFC;border:1.5px solid transparent;transition:.15s}
+.qa-item:hover{background:#F0F4F8;border-color:#D1D9E6}
+.qa-item.answered{opacity:.6;background:#F4F6F9}
+.qa-item.answered .qa-text{text-decoration:line-through;text-decoration-color:#94A3B8}
+.upvote{display:flex;flex-direction:column;align-items:center;gap:2px;flex:none;
+  border:2px solid var(--line);background:#fff;border-radius:8px;padding:7px 11px;
+  cursor:pointer;font-size:12.5px;font-weight:800;color:var(--pc-blue);transition:.16s;min-width:52px;min-height:46px}
+.upvote:hover{border-color:var(--pc-blue);background:var(--pc-blue-soft)}
+.upvote.voted{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-dk)}
+.caret{font-size:10px;line-height:1}
+.qa-body{flex:1;min-width:0}
+.qa-text{font-size:14.5px;font-weight:700;line-height:1.45;word-break:break-word;color:var(--ink)}
+.qa-meta{font-size:11.5px;color:var(--muted);font-weight:700;margin-top:5px;text-transform:uppercase}
+.qa-acts{display:flex;gap:2px;flex:none;flex-wrap:wrap}
+.overlay{position:fixed;inset:0;background:rgba(15,23,32,.6);backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);display:grid;place-items:center;z-index:200;padding:16px;
+  animation:fade .2s;overflow:auto}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{background:#fff;border-radius:16px;width:min(620px,100%);max-height:92vh;overflow:auto;
+  box-shadow:0 32px 80px rgba(0,0,0,.3);animation:pop .28s cubic-bezier(.2,.9,.3,1.25);border-top:6px solid var(--brand)}
+@keyframes pop{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 14px;gap:10px}
+.modal-head h2{font-size:clamp(16px,2vw,19px);font-weight:900;color:var(--pc-blue);text-transform:uppercase}
+.modal-body{padding:0 22px 22px;display:flex;flex-direction:column;gap:16px}
+.field{display:flex;flex-direction:column;gap:8px}
+.field > span{font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--pc-blue)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:2px solid var(--line);background:#fff;border-radius:6px;padding:9px 13px;
+  font-size:12.5px;font-weight:700;cursor:pointer;color:#4A5561;transition:.15s;min-height:40px}
+.chip:hover{border-color:var(--pc-blue)}
+.chip.active{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-dk)}
+.opt-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.opt-row .correct-toggle{width:42px;height:42px;border-radius:8px;border:2px solid var(--line);
+  background:#fff;cursor:pointer;font-size:17px;flex:none;transition:.15s;color:#fff}
+.opt-row .correct-toggle.on{background:var(--ok);border-color:var(--ok)}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding-top:4px;flex-wrap:wrap}
+.time-slider{display:flex;align-items:center;gap:12px}
+.time-slider input[type=range]{flex:1;accent-color:var(--brand);min-height:32px}
+.time-slider output{font-size:20px;font-weight:900;color:var(--brand);min-width:60px;text-align:right}
+.invite-shell{min-height:100vh;display:flex;flex-direction:column;background:#f4f6f9}
+.invite-topbar{background:#fff;border-bottom:3px solid var(--brand);padding:14px clamp(16px,4vw,40px)}
+.invite-topbar-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.invite-topbar h1{font-size:clamp(18px,2.4vw,26px);font-weight:900;color:var(--pc-blue);
+  text-transform:uppercase;letter-spacing:-.02em;flex:1;min-width:0}
+.invite-topbar .close-x{font-size:20px;color:var(--muted);width:40px;height:40px;border-radius:8px;
+  display:grid;place-items:center;cursor:pointer;transition:.15s;text-decoration:none;flex:none}
+.invite-topbar .close-x:hover{background:#E6ECF8;color:var(--pc-blue)}
+.invite-content{flex:1;padding:clamp(16px,3vw,36px) clamp(16px,4vw,40px);max-width:1200px;margin:0 auto;width:100%}
+.invite-card{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;
+  box-shadow:var(--shadow);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.invite-left{padding:clamp(22px,3vw,36px) clamp(20px,3vw,30px);display:flex;flex-direction:column;
+  align-items:center;gap:14px;text-align:center;border-right:2px dashed var(--line)}
+.invite-left .lbl{font-size:11.5px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.invite-left .qr-box{padding:14px;background:#fff;border-radius:14px;border:2px solid var(--line);
+  box-shadow:0 6px 20px rgba(0,51,160,.1);display:inline-block;user-select:none;-webkit-user-select:none;pointer-events:none}
+.invite-left .qr-box img{display:block;width:min(230px,55vw);height:min(230px,55vw)}
+.invite-left .room-label{font-size:11.5px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+.invite-left .room-value{font-size:clamp(26px,4vw,38px);font-weight:900;letter-spacing:.14em;color:var(--pc-blue);line-height:1}
+.invite-left .url-label{font-size:11.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);align-self:flex-start;margin-top:8px}
+.invite-left .url-box{font-size:11.5px;color:var(--muted);word-break:break-all;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#F4F6F9;padding:10px 14px;
+  border-radius:8px;width:100%;text-align:left;line-height:1.5}
+.invite-left .actions{display:flex;gap:8px;width:100%;margin-top:6px;flex-wrap:wrap}
+.invite-left .actions .btn{flex:1;min-width:140px}
+.invite-right{padding:clamp(18px,3vw,28px);display:flex;flex-direction:column;gap:14px;background:#FBFCFE;min-height:480px}
+.invite-right .head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.invite-right .head h2{font-size:clamp(14px,1.8vw,18px);font-weight:900;color:var(--pc-blue);text-transform:uppercase;letter-spacing:.02em}
+.invite-right .count-pill{background:var(--brand);color:#fff;padding:7px 16px;border-radius:30px;
+  font-size:15px;font-weight:900;letter-spacing:.04em;box-shadow:0 4px 12px rgba(227,30,36,.3)}
+
+/* ===================== DUCK POND ===================== */
+.duck-pond{
+  position:relative;flex:1;min-height:400px;
+  background:linear-gradient(180deg,#E8F4FF 0%,#CFE6FF 55%,#A6D0F5 100%);
+  border-radius:14px;overflow:hidden;
+  border:2px solid #B7D8F5;
+  box-shadow:inset 0 4px 12px rgba(0,51,160,.08);
+}
+.duck-pond::before{
+  content:'';position:absolute;left:0;right:0;top:0;height:55%;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,.35), transparent 25%),
+    radial-gradient(circle at 75% 20%, rgba(255,255,255,.35), transparent 22%),
+    radial-gradient(circle at 45% 15%, rgba(255,255,255,.25), transparent 18%);
+  pointer-events:none;
+}
+.duck-pond::after{
+  content:'';position:absolute;left:0;right:0;bottom:0;height:60%;
+  background:repeating-linear-gradient(0deg, rgba(255,255,255,.15) 0 2px, transparent 2px 8px);
+  pointer-events:none;opacity:.5;
+}
+.duck{
+  position:absolute;
+  width:64px;height:52px;
+  animation:swim var(--dur,12s) ease-in-out var(--delay,0s) infinite alternate;
+  will-change:transform;
+}
+@keyframes swim{
+  0%   { transform:translate(0,0); }
+  100% { transform:translate(var(--dx,50px), var(--dy,-12px)); }
+}
+.duck-body{
+  position:absolute;bottom:8px;left:6px;
+  width:52px;height:30px;
+  background:var(--color,#FFD93D);
+  border-radius:50% 50% 45% 55% / 60% 60% 40% 40%;
+  box-shadow:inset -3px -3px 0 rgba(0,0,0,.08), 0 3px 6px rgba(0,0,0,.12);
+}
+.duck-head{
+  position:absolute;top:4px;left:6px;
+  width:24px;height:24px;
+  background:var(--color,#FFD93D);
+  border-radius:50%;
+  box-shadow:inset -2px -2px 0 rgba(0,0,0,.08);
+}
+.duck-eye{
+  position:absolute;top:13px;left:20px;
+  width:4px;height:4px;
+  background:#1a1a1a;border-radius:50%;
+  z-index:2;
+}
+.duck-beak{
+  position:absolute;top:15px;left:0;
+  width:10px;height:7px;
+  background:#F5A623;
+  border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;
+  transform:rotate(-8deg);
+  box-shadow:0 1px 2px rgba(0,0,0,.18);
+}
+.duck-label{
+  position:absolute;bottom:-16px;left:50%;
+  transform:translateX(-50%);
+  white-space:nowrap;
+  font-size:11px;font-weight:900;
+  color:var(--pc-blue);
+  background:#fff;
+  padding:3px 9px;
+  border-radius:12px;
+  box-shadow:0 2px 6px rgba(0,51,160,.18);
+  border:1px solid rgba(0,51,160,.12);
+  max-width:110px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  z-index:3;
+}
+.duck-empty{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;text-align:center;color:var(--muted);
+  font-size:14px;font-weight:700;padding:40px 20px;
+  z-index:1;
+}
+.duck-empty .big{font-size:56px;opacity:.5;margin-bottom:6px}
+.duck-empty .sub{font-size:12.5px;font-weight:600;opacity:.85}
+
+.invite-foot{margin-top:18px;display:flex;align-items:center;gap:12px;
+  font-size:11.5px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em;flex-wrap:wrap}
+.invite-foot .sp{margin-left:auto}
+.invite-live-chip{position:fixed;top:12px;right:12px;z-index:50;background:#fff;border:2px solid var(--line);
+  border-radius:12px;padding:10px;box-shadow:0 6px 20px rgba(0,0,0,.12);display:flex;flex-direction:column;align-items:center;gap:4px}
+.invite-live-chip img{width:96px;height:96px;display:block}
+.invite-live-chip .lbl{font-size:9.5px;font-weight:900;color:var(--pc-blue);letter-spacing:.08em;text-transform:uppercase}
+@media(max-width:640px){.invite-live-chip{padding:6px}.invite-live-chip img{width:70px;height:70px}}
+
+.display-root{min-height:100vh;display:flex;flex-direction:column;
+  background:radial-gradient(1400px 900px at 50% -10%, #0a3a8f 0%, #001a4d 55%, #000d26 100%);
+  color:#fff;padding:0;overflow:hidden;position:relative}
+.display-root::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(600px 400px at 15% 90%, rgba(227,30,36,.18), transparent 60%),
+             radial-gradient(600px 400px at 85% 10%, rgba(0,120,255,.15), transparent 60%);
+  pointer-events:none}
+.display-bar{display:flex;align-items:center;gap:14px;padding:clamp(14px,2vw,22px) clamp(20px,4vw,40px);
+  position:relative;z-index:2;border-bottom:1px solid rgba(255,255,255,.1);flex-wrap:wrap}
+.display-brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:clamp(18px,2.4vw,26px);
+  letter-spacing:-.04em;font-style:italic}
+.display-brand .logo{width:clamp(32px,3vw,44px);height:clamp(32px,3vw,44px);border-radius:8px}
+.display-brand .logo svg{width:60%;height:60%}
+.display-brand .brand-text{color:#fff;text-transform:uppercase}
+.display-brand .brand-text span{color:#FF5A60}
+.display-room{margin-left:auto;display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  padding:8px 16px;border-radius:10px}
+.display-room .lbl{font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.65}
+.display-room .code{font-size:clamp(16px,2vw,22px);font-weight:900;letter-spacing:.12em;color:#FFA3A6}
+.display-live{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:20px;
+  background:rgba(227,30,36,.25);border:1px solid rgba(227,30,36,.5);font-size:11.5px;font-weight:900;
+  letter-spacing:.1em;text-transform:uppercase;color:#FFA3A6}
+.display-live::before{content:'';width:8px;height:8px;border-radius:50%;background:#FF5A60;animation:pulse 1.6s infinite}
+.display-body{flex:1;padding:clamp(20px,4vw,40px) clamp(20px,5vw,60px);display:flex;flex-direction:column;
+  position:relative;z-index:2;gap:clamp(20px,3vw,34px)}
+.display-center{align-items:center;justify-content:center;text-align:center;gap:22px}
+.display-eyebrow{font-size:clamp(11px,1.3vw,14px);font-weight:900;letter-spacing:.24em;text-transform:uppercase;color:#7fb0ff}
+.display-h1{font-size:clamp(26px,5.5vw,84px);font-weight:900;line-height:1.08;letter-spacing:-.04em;color:#fff;max-width:22ch}
+.display-lead{font-size:clamp(14px,1.6vw,22px);color:#A8B8D8;font-weight:600;max-width:60ch;line-height:1.5}
+.display-wait-icon{font-size:clamp(60px,10vw,140px);line-height:1;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.display-qhead{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.display-qbadge{background:linear-gradient(135deg,#E31E24,#B8141A);color:#fff;padding:10px 20px;
+  border-radius:10px;font-size:clamp(14px,1.8vw,20px);font-weight:900;letter-spacing:.04em;
+  box-shadow:0 10px 30px rgba(227,30,36,.4)}
+.display-answered{display:inline-flex;align-items:center;gap:10px;padding:10px 18px;border-radius:30px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);
+  font-size:clamp(13px,1.4vw,16px);font-weight:800;color:#fff}
+.display-answered .n{font-size:clamp(18px,2vw,24px);font-weight:900;color:#7FE5C8}
+.display-timer{margin-left:auto;display:flex;align-items:center;gap:14px}
+.display-timer .num{font-size:clamp(32px,4.5vw,52px);font-weight:900;font-variant-numeric:tabular-nums;color:#fff;
+  letter-spacing:-.04em;min-width:80px;text-align:right;transition:color .3s}
+.display-timer .num.low{color:#FF5A60;animation:shake .4s infinite}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.display-timer .ring{width:clamp(60px,6vw,90px);height:clamp(60px,6vw,90px);position:relative}
+.display-timer .ring svg{transform:rotate(-90deg);width:100%;height:100%}
+.display-timer .ring .track{fill:none;stroke:rgba(255,255,255,.12);stroke-width:8}
+.display-timer .ring .prog{fill:none;stroke:#7FE5C8;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .3s linear, stroke .3s}
+.display-timer .ring .prog.low{stroke:#FF5A60}
+.display-q{font-size:clamp(22px,4.4vw,68px);font-weight:900;line-height:1.14;letter-spacing:-.035em;color:#fff;max-width:28ch}
+.display-options{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,2vw,22px);margin-top:6px}
+.display-opt{position:relative;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.14);
+  border-radius:16px;padding:clamp(14px,2vw,26px) clamp(16px,2.4vw,32px);display:flex;align-items:center;
+  gap:clamp(12px,2vw,22px);overflow:hidden;transition:.3s}
+.display-opt .fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,rgba(255,255,255,.06),rgba(255,255,255,.18));
+  z-index:0;transition:width .5s cubic-bezier(.2,.8,.3,1);pointer-events:none}
+.display-opt .ltr{width:clamp(40px,4.5vw,56px);height:clamp(40px,4.5vw,56px);border-radius:12px;background:rgba(255,255,255,.14);
+  display:grid;place-items:center;font-size:clamp(16px,2vw,24px);font-weight:900;color:#fff;flex:none;z-index:1;transition:.3s}
+.display-opt .txt{flex:1;font-size:clamp(14px,1.7vw,26px);font-weight:800;line-height:1.25;color:#fff;z-index:1;min-width:0}
+.display-opt .cnt{font-size:clamp(16px,2vw,34px);font-weight:900;color:#fff;z-index:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.display-opt .pct{font-size:clamp(11px,1vw,14px);font-weight:800;color:#A8B8D8;z-index:1;min-width:44px;text-align:right}
+.display-opt.correct{background:linear-gradient(90deg,rgba(10,138,110,.35),rgba(10,138,110,.15));border-color:#26c39a;
+  box-shadow:0 0 60px rgba(38,195,154,.35)}
+.display-opt.correct .ltr{background:#26c39a;color:#fff}
+.display-opt.correct .fill{background:linear-gradient(90deg,rgba(10,138,110,.4),rgba(38,195,154,.35))}
+.display-opt.wrong{border-color:rgba(227,30,36,.4);background:rgba(227,30,36,.06)}
+.display-opt.wrong .fill{background:linear-gradient(90deg,rgba(227,30,36,.15),rgba(227,30,36,.3))}
+.display-opt.winner{animation:glow 1.6s ease-in-out infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 40px rgba(38,195,154,.3)}50%{box-shadow:0 0 80px rgba(38,195,154,.6)}}
+.display-winner{display:flex;align-items:center;gap:20px;padding:clamp(16px,2vw,26px) clamp(20px,3vw,36px);
+  border-radius:20px;background:linear-gradient(135deg,#FFD86B,#F5A623);box-shadow:0 20px 60px rgba(245,166,35,.4);
+  animation:popin .5s;color:#4a3400;flex-wrap:wrap}
+.display-winner .tr{font-size:clamp(36px,6vw,86px);line-height:1}
+.display-winner .info{flex:1;min-width:0}
+.display-winner .lbl{font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#7A5500;margin-bottom:4px}
+.display-winner .name{font-size:clamp(20px,3.4vw,52px);font-weight:900;letter-spacing:-.03em;color:#2b1e00;line-height:1.05;word-break:break-word}
+.display-winner .sub{font-size:clamp(12px,1.3vw,16px);font-weight:800;color:#7A5500;margin-top:4px}
+.display-winner .pts{font-size:clamp(22px,3.4vw,54px);font-weight:900;color:#B8141A;letter-spacing:-.03em}
+.display-lb{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin-top:auto}
+.display-lb-row{display:flex;align-items:center;gap:14px;padding:12px 18px;border-radius:14px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+.display-lb-row.top1{background:linear-gradient(90deg,rgba(255,216,107,.25),rgba(245,166,35,.1));border-color:rgba(245,166,35,.5)}
+.display-lb-rank{width:clamp(34px,3.5vw,44px);height:clamp(34px,3.5vw,44px);border-radius:12px;background:rgba(255,255,255,.14);
+  display:grid;place-items:center;font-size:clamp(14px,1.6vw,18px);font-weight:900;flex:none}
+.display-lb-row.top1 .display-lb-rank{background:#F5A623;color:#2b1e00}
+.display-lb-name{flex:1;font-size:clamp(13px,1.5vw,22px);font-weight:800;color:#fff;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.display-lb-score{font-size:clamp(14px,1.7vw,26px);font-weight:900;color:#FFA3A6;font-variant-numeric:tabular-nums}
+.display-lb-correct{font-size:clamp(11px,1vw,13px);font-weight:800;color:#A8B8D8;white-space:nowrap}
+.display-footer{position:relative;z-index:2;padding:12px clamp(20px,5vw,60px);border-top:1px solid rgba(255,255,255,.1);
+  display:flex;align-items:center;gap:16px;font-size:11.5px;font-weight:800;color:#A8B8D8;letter-spacing:.08em;
+  text-transform:uppercase;flex-wrap:wrap}
+.display-footer .sp{margin-left:auto}
+.join-hero{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;
+  padding:18px 10px 6px}
+.join-hero .icon{font-size:clamp(36px,6vw,44px)}
+.join-hero h1{font-size:clamp(20px,3vw,24px);font-weight:900;color:var(--pc-blue)}
+.join-hero p{margin:0;color:var(--muted);font-weight:600;font-size:13.5px;max-width:40ch}
+.room-chip{display:inline-flex;align-items:center;gap:8px;background:var(--brand-soft);
+  color:var(--brand-dk);padding:7px 14px;border-radius:20px;font-weight:900;letter-spacing:.1em;font-size:13px}
+.vote-ready{display:inline-flex;align-items:center;gap:6px;background:var(--ok-soft);
+  color:var(--ok);padding:6px 14px;border-radius:20px;font-weight:900;letter-spacing:.06em;font-size:12px;
+  text-transform:uppercase;border:1px solid #b8e6d8}
+.display-only-badge{display:inline-flex;align-items:center;gap:6px;background:#FFF3CD;
+  color:#7A5500;padding:6px 14px;border-radius:20px;font-weight:900;letter-spacing:.06em;font-size:12px;
+  text-transform:uppercase;border:1px solid #F5D97A}
+.loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;padding:80px 20px;text-align:center}
+.loading-state .spinner{width:48px;height:48px;border:4px solid var(--line);border-top-color:var(--brand);
+  border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-state p{margin:0;font-weight:800;color:var(--pc-blue);font-size:15px}
+.loading-state span{font-size:13px;color:var(--muted);font-weight:600}
+#toastRoot{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:300;
+  display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;
+  width:calc(100% - 32px);max-width:380px}
+.toast{background:var(--pc-blue);color:#fff;padding:11px 20px;border-radius:8px;font-size:13.5px;
+  font-weight:700;box-shadow:0 12px 36px rgba(0,0,0,.3);animation:toastIn .3s;border-left:4px solid var(--brand);
+  text-align:center;width:100%}
+@keyframes toastIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@media(max-width:1000px){
+  .layout{grid-template-columns:1fr;gap:14px;padding:0 12px 12px}
+  .side{order:2}
+  .stage, .quiz-stage{order:1;min-height:auto}
+  .poll-list,.q-list{max-height:none}
+  .display-lb{grid-template-columns:1fr}
+}
+@media(max-width:820px){
+  .invite-card{grid-template-columns:1fr}
+  .invite-left{border-right:none;border-bottom:2px dashed var(--line)}
+  .display-options{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .topbar{padding:10px 12px}
+  .room{margin-left:auto;order:2}
+  .seg{order:3;width:100%;justify-content:stretch}
+  .seg button{flex:1;text-align:center}
+  .subnav{padding:10px 12px 0}
+  .subnav button{padding:9px 12px;font-size:11.5px}
+  .q-header{gap:8px}
+  .q-timer{margin-left:0;width:100%}
+  .q-answered-pill{margin-left:auto}
+  .quiz-actions{gap:6px}
+  .quiz-actions .btn{flex:1;min-width:0}
+  .winner-card{flex-direction:column;align-items:flex-start;text-align:left}
+  .winner-card .w-points{align-self:flex-end}
+  .lb-row{flex-wrap:wrap}
+  .lb-correct{order:4;width:100%}
+  .invite-topbar-inner{gap:8px}
+}
+@media(max-width:420px){
+  .brand-text{font-size:14px}
+  .room-label{display:none}
+  .room{padding:4px 5px}
+  .display-timer{margin-left:0;width:100%;justify-content:flex-end}
+}
+@media(max-height:520px) and (orientation:landscape){
+  .stage, .quiz-stage{min-height:auto}
+  .display-body{gap:14px;padding:14px 20px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12h4l3-7 4 14 3-7h4"/>
+      </svg>
+    </div>
+    <div class="brand-text">PC <span>Express</span> Pulse</div>
+  </div>
+  <div class="room">
+    <span class="room-label">Room</span>
+    <button class="room-code" id="roomCodeBtn" title="Copy room code">PCX-4821</button>
+  </div>
+  <div class="seg" id="roleSeg">
+    <button data-role="presenter" class="active">Presenter</button>
+    <button data-role="participant">Participant</button>
+  </div>
+  <div id="lockBadge" style="display:none" class="lock-badge">🔒 Participant</div>
+  <div id="syncIndicator" class="sync-dot" style="display:none"><span class="b"></span><span>Sync</span></div>
+</header>
+
+<main id="app"></main>
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const SUPABASE_URL = 'https://epfxjpcppvjimwcuairb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_BTCwp9X-clSHBcC-vXU2kA_GyDh7tdz';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const KEY = 'pcx.pulse.state.v18';
+const NAME_KEY = 'pcx.pulse.name';
+
+const urlParams = new URLSearchParams(location.search);
+const urlRoom = urlParams.get('room');
+const urlRole = urlParams.get('role');
+const urlDisplay = urlParams.get('display');
+const urlInvite = urlParams.get('invite');
+
+let roleLocked = false;
+let role;
+if (urlInvite === '1') { role = 'invite'; roleLocked = true; }
+else if (urlDisplay === '1') { role = 'display'; roleLocked = true; }
+else if (urlRoom) { role = 'participant'; roleLocked = true; }
+else if (urlRole === 'presenter') { role = 'presenter'; roleLocked = true; }
+else { role = sessionStorage.getItem('pcx.pulse.role') || 'presenter'; }
+
+let myId = null;
+let sessionId = null;
+let channel = null;
+let supabaseReady = false;
+let pollHandle = null;
+
+const TYPE_LABEL = { multiple_choice:'Multiple choice', word_cloud:'Word cloud', open_text:'Open text', rating:'Rating' };
+const STATUS_LABEL = { draft:'Draft', live:'Live', closed:'Closed' };
+const CLOUD_COLORS = ['#E31E24','#0033A0','#E31E24','#0033A0','#6B7280','#B8141A','#002270'];
+const LETTERS = ['A','B','C','D','E','F'];
+const DUCK_COLORS = ['#FFD93D','#FFC93C','#FFE066','#FFD97D','#F9C846','#FFCC4D'];
+
+/* ============================================================
+   SEED
+   ============================================================ */
+function makeSeedQuiz() {
+  return [
+    { text: 'Which GPU brand is known for DLSS technology?',
+      options: ['NVIDIA', 'AMD', 'Intel', 'Qualcomm'], correctIndex: 0, timeLimit: 20 },
+    { text: 'What does "SSD" stand for in storage?',
+      options: ['Solid State Drive', 'Super Speed Disk', 'Secure Storage Device', 'Silicon Static Drive'],
+      correctIndex: 0, timeLimit: 15 },
+    { text: 'Which PC Express service lets you get a build delivered same-day?',
+      options: ['Express Delivery', 'Standard Shipping', 'Store Pickup', 'Courier Plus'],
+      correctIndex: 0, timeLimit: 20 },
+    { text: 'What is the typical response time of a high-refresh gaming monitor?',
+      options: ['1 ms', '16 ms', '50 ms', '100 ms'], correctIndex: 0, timeLimit: 15 },
+    { text: 'Which component is the "brain" of a PC?',
+      options: ['CPU', 'RAM', 'GPU', 'PSU'], correctIndex: 0, timeLimit: 10 }
+  ];
+}
+
+function makeSeed() {
+  return {
+    code: 'PCX-4821',
+    polls: [],
+    questions: [],
+    quiz: {
+      title: 'PC Express Product Knowledge Quiz',
+      status: 'idle',
+      currentIndex: -1,
+      questions: makeSeedQuiz().map((q, i) => ({
+        id: 'local-' + i, supabaseId: null,
+        text: q.text, options: q.options, correctIndex: q.correctIndex, timeLimit: q.timeLimit,
+        status: 'idle', startedAt: null, votes: []
+      }))
+    },
+    participants: {}
+  };
+}
+
+let state;
+try {
+  const cached = localStorage.getItem(KEY);
+  state = cached ? JSON.parse(cached) : makeSeed();
+  if (!state || !state.quiz || !Array.isArray(state.quiz.questions)) state = makeSeed();
+  if (!state.participants) state.participants = {};
+} catch (e) { state = makeSeed(); }
+
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+/* ============================================================
+   SUPABASE SYNC
+   ============================================================ */
+function setSyncIndicator(online) {
+  const el = document.getElementById('syncIndicator');
+  if (!el) return;
+  el.style.display = 'inline-flex';
+  el.classList.toggle('live', online);
+}
+
+async function initSupabase() {
+  try {
+    let { data: { session } } = await db.auth.getSession();
+    if (!session) {
+      const { data, error } = await db.auth.signInAnonymously();
+      if (error) {
+        console.error('[auth]', error);
+        setSyncIndicator(false);
+        supabaseReady = true; render();
+        return;
+      }
+      session = data.session;
+    }
+    myId = session.user.id;
+
+    await ensureSession();
+    if (!sessionId) {
+      supabaseReady = true; render();
+      startSessionPoll();
+      return;
+    }
+    await loadParticipants();
+    await loadVotes();
+    await loadQuestionStatuses();
+    subscribeRealtime();
+    supabaseReady = true;
+    setSyncIndicator(true);
+    render();
+  } catch (e) {
+    console.error('[init]', e);
+    supabaseReady = true; render();
+  }
+}
+
+function startSessionPoll() {
+  if (pollHandle) return;
+  let attempts = 0;
+  pollHandle = setInterval(async () => {
+    attempts++;
+    await ensureSession();
+    if (sessionId) {
+      clearInterval(pollHandle); pollHandle = null;
+      await loadParticipants();
+      await loadVotes();
+      await loadQuestionStatuses();
+      subscribeRealtime();
+      setSyncIndicator(true); render();
+      return;
+    }
+    if (attempts >= 300) { clearInterval(pollHandle); pollHandle = null; }
+  }, 2000);
+}
+
+async function ensureSession() {
+  const { data: existing, error: lookErr } = await db
+    .from('sessions').select('*').eq('code', state.code).maybeSingle();
+  if (lookErr) { console.error('[lookup]', lookErr); return; }
+
+  if (existing) {
+    sessionId = existing.id;
+    state.quiz.title = existing.title || state.quiz.title;
+    state.quiz.status = existing.status || 'idle';
+    state.quiz.currentIndex = existing.current_index ?? -1;
+
+    const { data: qs } = await db.from('questions')
+      .select('*').eq('session_id', sessionId).order('position');
+    if (qs && qs.length) {
+      state.quiz.questions = qs.map(rq => ({
+        id: rq.id, supabaseId: rq.id,
+        text: rq.text, options: rq.options,
+        correctIndex: rq.correct_index, timeLimit: rq.time_limit,
+        status: rq.status, startedAt: rq.started_at ? Date.parse(rq.started_at) : null,
+        votes: []
+      }));
+    }
+    save();
+    return;
+  }
+
+  if (role !== 'presenter') return;
+
+  const { data: created, error: insErr } = await db.from('sessions')
+    .insert({ code: state.code, title: state.quiz.title }).select().single();
+  if (insErr) { console.error('[create]', insErr); return; }
+  sessionId = created.id;
+
+  const rows = state.quiz.questions.map((q, i) => ({
+    session_id: sessionId, position: i, text: q.text, options: q.options,
+    correct_index: q.correctIndex, time_limit: q.timeLimit, status: 'idle'
+  }));
+  const { data: inserted } = await db.from('questions').insert(rows).select();
+  if (inserted) {
+    inserted.sort((a, b) => a.position - b.position);
+    state.quiz.questions.forEach((q, i) => {
+      if (inserted[i]) q.supabaseId = inserted[i].id;
+    });
+    save();
+  }
+}
+
+async function loadParticipants() {
+  if (!sessionId) return;
+  const { data } = await db.from('participants').select('*').eq('session_id', sessionId);
+  state.participants = {};
+  (data || []).forEach(p => {
+    state.participants[p.id] = { id: p.id, name: p.name, joinedAt: Date.parse(p.joined_at) };
+  });
+  save();
+}
+
+async function loadVotes() {
+  if (!sessionId) return;
+  const { data } = await db.from('votes').select('*').eq('session_id', sessionId);
+  state.quiz.questions.forEach(q => q.votes = []);
+  (data || []).forEach(v => {
+    const q = state.quiz.questions.find(x => x.supabaseId === v.question_id);
+    if (q) {
+      q.votes.push({
+        voter: v.voter, name: v.name, value: v.value,
+        timestamp: Date.parse(v.timestamp), score: v.score || 0
+      });
+    }
+  });
+  save();
+}
+
+async function loadQuestionStatuses() {
+  if (!sessionId) return;
+  const { data } = await db.from('questions')
+    .select('id, status, started_at').eq('session_id', sessionId);
+  (data || []).forEach(rq => {
+    const lq = state.quiz.questions.find(x => x.supabaseId === rq.id);
+    if (lq) {
+      lq.status = rq.status;
+      lq.startedAt = rq.started_at ? Date.parse(rq.started_at) : null;
+    }
+  });
+  save();
+}
+
+function subscribeRealtime() {
+  if (channel) db.removeChannel(channel);
+  channel = db.channel('room-' + state.code)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions', filter: 'id=eq.' + sessionId },
+      (p) => { if (p.new) { state.quiz.status = p.new.status; state.quiz.currentIndex = p.new.current_index; save(); render(); } })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'participants', filter: 'session_id=eq.' + sessionId },
+      async () => { await loadParticipants(); render(); })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'questions', filter: 'session_id=eq.' + sessionId },
+      async () => { await loadQuestionStatuses(); render(); })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'votes', filter: 'session_id=eq.' + sessionId },
+      async () => { await loadVotes(); render(); })
+    .subscribe((status) => setSyncIndicator(status === 'SUBSCRIBED'));
+}
+
+/* ============================================================
+   DB WRITES
+   ============================================================ */
+async function dbUpdateSession(fields) { if (sessionId) await db.from('sessions').update(fields).eq('id', sessionId); }
+async function dbUpdateQuestion(q, fields) { if (q && q.supabaseId) await db.from('questions').update(fields).eq('id', q.supabaseId); }
+async function dbUpsertParticipant(name) {
+  if (!sessionId || !myId) return;
+  await db.from('participants').upsert({ id: myId, session_id: sessionId, name }, { onConflict: 'id,session_id' });
+}
+async function dbUpsertVote(q, value, timestamp, score) {
+  if (!sessionId || !myId || !q.supabaseId) return;
+  await db.from('votes').upsert({
+    session_id: sessionId, question_id: q.supabaseId, voter: myId,
+    name: getParticipantName() || 'Anonymous', value,
+    timestamp: new Date(timestamp).toISOString(), score
+  }, { onConflict: 'question_id,voter' });
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function h(tag, props, ...kids) {
+  const el = document.createElement(tag);
+  if (props) {
+    for (const [k, v] of Object.entries(props)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === 'class') el.className = v;
+      else if (k === 'html') el.innerHTML = v;
+      else if (k === 'value') el.value = v;
+      else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+      else if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), v);
+      else el.setAttribute(k, v);
+    }
+  }
+  kids.flat(Infinity).forEach(k => {
+    if (k === null || k === undefined || k === false) return;
+    el.appendChild(typeof k === 'object' ? k : document.createTextNode(String(k)));
+  });
+  return el;
+}
+const btn = (label, cls, fn) => h('button', { class: 'btn ' + cls, onclick: fn }, label);
+
+function toast(msg) {
+  const root = document.getElementById('toastRoot');
+  const t = h('div', { class: 'toast' }, msg);
+  root.appendChild(t);
+  setTimeout(() => {
+    t.style.transition = 'opacity .3s, transform .3s';
+    t.style.opacity = '0'; t.style.transform = 'translateY(10px)';
+    setTimeout(() => t.remove(), 320);
+  }, 1800);
+}
+
+function relTime(ts) {
+  const s = Math.max(0, Math.round((Date.now() - ts) / 1000));
+  if (s < 60) return s + 's ago';
+  const m = Math.round(s / 60);
+  if (m < 60) return m + 'm ago';
+  return Math.round(m / 60) + 'h ago';
+}
+
+function logoSvg() {
+  return h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '3',
+    'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+    h('path', { d: 'M3 12h4l3-7 4 14 3-7h4' }));
+}
+
+function getParticipantName() { return localStorage.getItem(NAME_KEY) || ''; }
+function setParticipantName(n) {
+  localStorage.setItem(NAME_KEY, n);
+  state.participants[myId] = { id: myId, name: n, joinedAt: Date.now() };
+  save();
+  dbUpsertParticipant(n);
+}
+function participantCount() { return Object.keys(state.participants || {}).length; }
+function participantList() {
+  return Object.values(state.participants || {}).sort((a, b) => a.joinedAt - b.joinedAt);
+}
+
+/* ============================================================
+   QUIZ LOGIC
+   ============================================================ */
+function scoreFor(q, timestamp) {
+  const elapsed = (timestamp - q.startedAt) / 1000;
+  const remaining = Math.max(0, q.timeLimit - elapsed);
+  return 1000 + Math.round((remaining / q.timeLimit) * 500);
+}
+
+async function submitQuizAnswer(q, value) {
+  if (q.status !== 'active' || !q.startedAt) return;
+  if (q.votes.find(v => v.voter === myId)) return;
+  const timestamp = Date.now();
+  const name = getParticipantName() || 'Anonymous';
+  if (!state.participants[myId]) {
+    state.participants[myId] = { id: myId, name, joinedAt: timestamp };
+    dbUpsertParticipant(name);
+  }
+  const score = (value === q.correctIndex) ? scoreFor(q, timestamp) : 0;
+  q.votes.push({ voter: myId, name, value, timestamp, score });
+  delete ui.pickedAnswers[q.id];
+  save(); render();
+  toast(value === q.correctIndex ? 'Correct! +' + score + ' pts' : 'Answer submitted');
+  await dbUpsertVote(q, value, timestamp, score);
+}
+
+function autoSubmitIfPicked(q) {
+  if (role !== 'participant' && role !== 'invite') return;
+  if (q.votes.find(v => v.voter === myId)) return;
+  const pickedIdx = ui.pickedAnswers[q.id];
+  if (pickedIdx === undefined) return;
+  const timeoutAt = q.startedAt + q.timeLimit * 1000;
+  const name = getParticipantName() || 'Anonymous';
+  if (!state.participants[myId]) state.participants[myId] = { id: myId, name, joinedAt: timeoutAt };
+  const score = (pickedIdx === q.correctIndex) ? scoreFor(q, timeoutAt) : 0;
+  q.votes.push({ voter: myId, name, value: pickedIdx, timestamp: timeoutAt, score });
+  delete ui.pickedAnswers[q.id];
+  dbUpsertVote(q, pickedIdx, timeoutAt, score);
+}
+
+async function startQuiz() {
+  if (!sessionId) { toast('Still connecting — please wait'); return; }
+  if (!state.quiz.questions.length) { toast('Add questions first'); return; }
+  state.quiz.status = 'running';
+  state.quiz.currentIndex = 0;
+  state.quiz.questions.forEach(q => { q.status = 'idle'; q.startedAt = null; q.votes = []; });
+  ui.pickedAnswers = {};
+  save(); render();
+  await dbUpdateSession({ status: 'running', current_index: 0 });
+  await activateQuestion(0);
+  toast('Quiz started — Question 1 is live!');
+}
+
+async function activateQuestion(index) {
+  const q = state.quiz.questions[index];
+  if (!q) return;
+  q.status = 'active'; q.startedAt = Date.now(); q.votes = [];
+  state.quiz.currentIndex = index;
+  save();
+  await dbUpdateSession({ current_index: index });
+  await dbUpdateQuestion(q, { status: 'active', started_at: new Date(q.startedAt).toISOString() });
+}
+
+async function revealQuestion(q) {
+  if (!q) return;
+  q.status = 'revealed';
+  save(); render();
+  await dbUpdateQuestion(q, { status: 'revealed' });
+}
+
+async function nextQuestion() {
+  const idx = state.quiz.currentIndex;
+  const q = state.quiz.questions[idx];
+  if (q && q.status === 'active') { toast('Reveal the answer first'); return; }
+  if (idx + 1 >= state.quiz.questions.length) {
+    state.quiz.status = 'finished'; save(); render();
+    await dbUpdateSession({ status: 'finished' });
+    toast('Quiz finished!');
+    return;
+  }
+  ui.selectedQuizIndex = idx + 1;
+  render();
+  await activateQuestion(idx + 1);
+}
+
+async function resetQuiz() {
+  state.quiz.status = 'idle';
+  state.quiz.currentIndex = -1;
+  state.quiz.questions.forEach(q => { q.status = 'idle'; q.startedAt = null; q.votes = []; });
+  state.participants = {};
+  ui.pickedAnswers = {};
+  ui.selectedQuizIndex = 0;
+  save(); render();
+
+  if (!sessionId) return;
+  try {
+    await db.from('votes').delete().eq('session_id', sessionId);
+    await db.from('participants').delete().eq('session_id', sessionId);
+    await db.from('questions').update({ status: 'idle', started_at: null }).eq('session_id', sessionId);
+    await dbUpdateSession({ status: 'idle', current_index: -1 });
+  } catch (e) { console.error('[reset]', e); }
+
+  await loadParticipants();
+  await loadVotes();
+  await loadQuestionStatuses();
+  render();
+  toast('Quiz reset — leaderboard cleared');
+}
+
+function fastestCorrect(q) {
+  if (!q || q.status !== 'revealed') return null;
+  const correct = q.votes.filter(v => v.value === q.correctIndex);
+  if (!correct.length) return null;
+  return correct.slice().sort((a, b) => a.timestamp - b.timestamp)[0];
+}
+
+function getLeaderboard() {
+  const map = {};
+  state.quiz.questions.forEach(q => {
+    q.votes.forEach(v => {
+      if (!map[v.voter]) map[v.voter] = { voter: v.voter, name: v.name, score: 0, correct: 0, answered: 0 };
+      map[v.voter].score += v.score || 0;
+      map[v.voter].answered++;
+      if (q.status === 'revealed' && v.value === q.correctIndex) map[v.voter].correct++;
+    });
+  });
+  return Object.values(map).sort((a, b) => b.score - a.score || b.correct - a.correct);
+}
+
+/* ============================================================
+   POLLS (local only)
+   ============================================================ */
+function vote(poll, value) {
+  const existing = poll.votes.find(v => v.voter === myId);
+  if (existing) existing.value = value;
+  else poll.votes.push({ voter: myId, value });
+  save(); render(); toast('Vote counted');
+}
+function setStatus(poll, status) { poll.status = status; save(); render(); toast('Poll updated'); }
+function ask(text) { state.questions.push({ id: 'q' + Date.now(), text, votes: [], answered: false }); save(); render(); toast('Question submitted'); }
+function toggleUpvote(q) {
+  const i = q.votes.indexOf(myId);
+  if (i >= 0) q.votes.splice(i, 1); else q.votes.push(myId);
+  save(); render();
+}
+
+/* ============================================================
+   TIMER LOOP
+   ============================================================ */
+let timerHandle = null;
+function ensureTimerLoop() { if (!timerHandle) timerHandle = setInterval(tickTimer, 250); }
+function tickTimer() {
+  const now = Date.now();
+  let needsRender = false;
+  state.quiz.questions.forEach(q => {
+    if (q.status !== 'active' || !q.startedAt) return;
+    const elapsed = (now - q.startedAt) / 1000;
+    const remaining = Math.max(0, q.timeLimit - elapsed);
+    const low = remaining <= 5;
+
+    document.querySelectorAll('[data-timer="' + q.id + '"]').forEach(el => {
+      el.textContent = Math.ceil(remaining) + 's';
+      el.classList.toggle('low', low);
+    });
+    document.querySelectorAll('[data-timer-bar="' + q.id + '"]').forEach(el => {
+      el.style.width = (remaining / q.timeLimit * 100) + '%';
+      el.classList.toggle('low', low);
+    });
+    document.querySelectorAll('[data-timer-ring="' + q.id + '"]').forEach(el => {
+      const pct = remaining / q.timeLimit;
+      const circumference = 2 * Math.PI * 40;
+      el.style.strokeDasharray = circumference;
+      el.style.strokeDashoffset = circumference * (1 - pct);
+      el.classList.toggle('low', low);
+    });
+    document.querySelectorAll('[data-timer-num="' + q.id + '"]').forEach(el => {
+      el.textContent = Math.ceil(remaining);
+      el.classList.toggle('low', low);
+    });
+
+    if (elapsed >= q.timeLimit + 0.5) {
+      autoSubmitIfPicked(q);
+      q.status = 'revealed';
+      save();
+      dbUpdateQuestion(q, { status: 'revealed' });
+      needsRender = true;
+    }
+  });
+  document.querySelectorAll('[data-rel-time]').forEach(el => {
+    const ts = Number(el.dataset.relTime);
+    if (ts) el.textContent = relTime(ts);
+  });
+  if (needsRender) render();
+}
+
+/* ============================================================
+   RESULTS
+   ============================================================ */
+function renderResults(poll) {
+  const box = h('div', { class: 'results' });
+  const total = poll.votes.length;
+  if (poll.type === 'multiple_choice' || poll.type === 'rating') {
+    const labels = poll.type === 'rating' ? ['1','2','3','4','5'] : poll.options;
+    const counts = new Array(labels.length).fill(0);
+    poll.votes.forEach(v => { const i = Number(v.value); if (i >= 0 && i < counts.length) counts[i]++; });
+    if (poll.type === 'rating' && total) {
+      const avg = poll.votes.reduce((s, v) => s + (Number(v.value) + 1), 0) / total;
+      box.appendChild(h('div', { class: 'avg' }, h('strong', {}, avg.toFixed(1)), h('span', {}, 'Average Rating')));
+    }
+    labels.forEach((label, i) => {
+      const pct = total ? Math.round(counts[i] / total * 100) : 0;
+      box.appendChild(h('div', { class: 'bar' },
+        h('div', { class: 'bar-top' }, h('span', { class: 'bar-label' }, label), h('span', { class: 'bar-val' }, pct + '%  ·  ' + counts[i])),
+        h('div', { class: 'bar-track' }, h('div', { class: 'bar-fill', style: { width: pct + '%' } }))));
+    });
+  } else if (poll.type === 'word_cloud') {
+    const map = new Map();
+    poll.votes.forEach(v => { const w = String(v.value).trim().toLowerCase(); if (!w) return; map.set(w, (map.get(w) || 0) + 1); });
+    const entries = [...map.entries()].sort((a, b) => b[1] - a[1]);
+    const cloud = h('div', { class: 'cloud' });
+    if (!entries.length) cloud.appendChild(h('p', { class: 'empty' }, 'No responses yet'));
+    else {
+      const max = entries[0][1];
+      entries.forEach(([w, c], i) => cloud.appendChild(h('span', {
+        class: 'cloud-word',
+        style: { fontSize: 'clamp(16px,' + (1 + (c / max) * 2.2) + 'vw,' + (18 + (c / max) * 38) + 'px)',
+          color: CLOUD_COLORS[i % CLOUD_COLORS.length], animationDelay: (i * 35) + 'ms' }
+      }, w)));
+    }
+    box.appendChild(cloud);
+  } else {
+    const list = h('div', { class: 'responses' });
+    if (!poll.votes.length) list.appendChild(h('p', { class: 'empty' }, 'No responses yet'));
+    else poll.votes.slice().reverse().forEach(v => list.appendChild(h('div', { class: 'response' }, String(v.value))));
+    box.appendChild(list);
+  }
+  return box;
+}
+
+/* ============================================================
+   PRESENTER POLLS
+   ============================================================ */
+function presenterPolls() {
+  const layout = h('div', { class: 'layout' });
+  const side = h('aside', { class: 'panel side' });
+  side.appendChild(h('div', { class: 'side-head' }, h('h2', {}, 'Polls'), btn('+ New poll', 'btn-primary btn-sm', openComposer)));
+  const list = h('div', { class: 'poll-list' });
+  if (!state.polls.length) list.appendChild(h('p', { class: 'empty' }, 'No polls yet.'));
+  [...state.polls].reverse().forEach(p => {
+    list.appendChild(h('button', {
+      class: 'poll-item' + (p.id === ui.selectedPollId ? ' selected' : ''),
+      onclick: () => { ui.selectedPollId = p.id; render(); }
+    },
+      h('div', { class: 'poll-item-q' }, p.question),
+      h('div', { class: 'poll-item-meta' },
+        h('span', { class: 'badge' }, TYPE_LABEL[p.type]),
+        h('span', { class: 'status ' + p.status }, STATUS_LABEL[p.status]),
+        h('span', { class: 'muted-sm' }, p.votes.length + ' votes'))));
+  });
+  side.appendChild(list);
+  const selected = state.polls.find(p => p.id === ui.selectedPollId) || state.polls.find(p => p.status === 'live') || state.polls[0];
+  if (selected) ui.selectedPollId = selected.id;
+  layout.appendChild(side);
+  const stage = h('section', { class: 'panel stage' });
+  if (!selected) stage.appendChild(h('div', { class: 'empty-state', style: { margin: 'auto' } },
+    h('div', { class: 'empty-icon' }, '📊'), h('p', {}, 'No polls yet'), h('span', {}, 'Create a poll to start.')));
+  else stage.appendChild(stageContent(selected));
+  layout.appendChild(stage);
+  return layout;
+}
+
+function stageContent(poll) {
+  const frag = document.createDocumentFragment();
+  const total = poll.votes.length;
+  const head = h('div', { class: 'stage-head' });
+  head.appendChild(h('span', { class: 'badge' }, TYPE_LABEL[poll.type]));
+  head.appendChild(h('span', { class: 'status ' + poll.status }, STATUS_LABEL[poll.status]));
+  head.appendChild(h('span', { class: 'spacer' }));
+  if (poll.status === 'draft') head.appendChild(btn('Launch', 'btn-primary btn-sm', () => setStatus(poll, 'live')));
+  if (poll.status === 'live') head.appendChild(btn('Close', 'btn-blue btn-sm', () => setStatus(poll, 'closed')));
+  if (poll.status === 'closed') head.appendChild(btn('Reopen', 'btn-ghost btn-sm', () => setStatus(poll, 'live')));
+  head.appendChild(btn('Delete', 'btn-ghost btn-sm danger', () => {
+    state.polls = state.polls.filter(p => p.id !== poll.id); ui.selectedPollId = null; save(); render();
+  }));
+  frag.appendChild(head);
+  frag.appendChild(h('h1', { class: 'stage-q' }, poll.question));
+  frag.appendChild(h('div', { class: 'stage-sub' }, total + (total === 1 ? ' response' : ' responses')));
+  frag.appendChild(renderResults(poll));
+  return frag;
+}
+
+/* ============================================================
+   PRESENTER QUIZ
+   ============================================================ */
+function presenterQuiz() {
+  const quiz = state.quiz;
+  const layout = h('div', { class: 'layout' });
+  const side = h('aside', { class: 'panel side' });
+  side.appendChild(h('div', { class: 'side-head' }, h('h2', {}, 'Quiz questions')));
+  const list = h('div', { class: 'q-list' });
+  quiz.questions.forEach((q, i) => {
+    const isCurrent = i === quiz.currentIndex;
+    list.appendChild(h('div', {
+      class: 'q-list-item' + (isCurrent ? ' selected' : '') + (q.status === 'revealed' ? ' revealed' : '') + (q.status === 'active' ? ' active' : '')
+    },
+      h('div', { class: 'q-num' }, i + 1),
+      h('div', { class: 'q-text' }, q.text),
+      h('div', { class: 'q-answered' }, q.votes.length + ' ✓')));
+  });
+  side.appendChild(list);
+  side.appendChild(h('div', { style: { padding: '12px 16px', borderTop: '1px solid var(--line)', display: 'flex', gap: '8px', flexWrap: 'wrap' } },
+    btn('Share QR', 'btn-blue btn-sm', openInviteTab),
+    btn('Reset quiz', 'btn-ghost btn-sm danger', () => { if (confirm('Reset the entire quiz? This will clear all answers and the leaderboard.')) resetQuiz(); })));
+  layout.appendChild(side);
+
+  const stage = h('section', { class: 'panel quiz-stage' });
+  const head = h('div', { class: 'quiz-head', style: { padding: '0 0 16px', borderBottom: 'none' } });
+  head.appendChild(h('h2', {}, quiz.title));
+  head.appendChild(h('div', { class: 'quiz-meta' },
+    h('div', {}, h('b', {}, participantCount()), ' joined'),
+    h('div', {}, h('b', {}, quiz.questions.length), ' questions'),
+    h('div', {}, 'Status: ', h('b', {}, quiz.status))));
+  head.appendChild(h('span', { style: { flex: '1' } }));
+  if (quiz.status === 'idle' || quiz.status === 'finished') head.appendChild(btn('▶ Start quiz', 'btn-primary btn-sm', startQuiz));
+  head.appendChild(btn('Share QR', 'btn-blue btn-sm', openInviteTab));
+  stage.appendChild(head);
+
+  const idx = quiz.currentIndex >= 0 ? quiz.currentIndex : ui.selectedQuizIndex;
+  const q = quiz.questions[idx];
+  if (!q) {
+    stage.appendChild(h('div', { class: 'empty-state' },
+      h('div', { class: 'empty-icon' }, '🎯'), h('p', {}, 'No quiz questions yet'), h('span', {}, 'Session is being set up…')));
+    layout.appendChild(stage);
+    return layout;
+  }
+  stage.appendChild(renderQuizQuestion(q, idx, 'presenter'));
+  layout.appendChild(stage);
+  return layout;
+}
+
+/* ============================================================
+   QUIZ QUESTION
+   ============================================================ */
+function renderQuizQuestion(q, idx, mode) {
+  const isPresenter = mode === 'presenter';
+  const isParticipant = mode === 'participant';
+
+  const wrap = h('div', { style: { display: 'flex', flexDirection: 'column', gap: '18px' } });
+  const total = state.quiz.questions.length;
+  const answered = q.votes.length;
+  const participants = Math.max(participantCount(), answered);
+  const revealed = q.status === 'revealed';
+  const mineVote = q.votes.find(v => v.voter === myId);
+  const pickedIdx = ui.pickedAnswers[q.id];
+  const hasPicked = pickedIdx !== undefined;
+  const isActive = q.status === 'active';
+  const canInteract = isParticipant && isActive && !mineVote;
+
+  const header = h('div', { class: 'q-header' });
+  header.appendChild(h('div', { class: 'q-badge' }, 'Question ' + (idx + 1) + ' of ' + total));
+  if (isActive) {
+    const timer = h('div', { class: 'q-timer' });
+    timer.appendChild(h('div', { class: 'timer-bar-track' }, h('div', {
+      class: 'timer-bar', 'data-timer-bar': q.id,
+      style: { width: (Math.max(0, (q.timeLimit - (Date.now() - q.startedAt) / 1000) / q.timeLimit * 100)) + '%' } })));
+    timer.appendChild(h('div', { class: 'timer-num', 'data-timer': q.id }, q.timeLimit + 's'));
+    header.appendChild(timer);
+  } else {
+    header.appendChild(h('div', { class: 'q-timer' }, h('span', { class: 'muted-sm' }, '⏱ ' + q.timeLimit + 's limit')));
+  }
+  header.appendChild(h('div', { class: 'q-answered-pill' },
+    h('span', { class: 'n' }, answered),
+    h('span', {}, 'of ' + participants + ' answered')));
+  if (isParticipant && isActive && !mineVote) header.appendChild(h('div', { class: 'vote-ready' }, '✋ You can vote'));
+  if (isParticipant && mineVote) header.appendChild(h('div', { class: 'vote-ready' }, '✓ Voted'));
+  if (!isPresenter && !isParticipant) header.appendChild(h('div', { class: 'display-only-badge' }, '🔒 Display only'));
+  wrap.appendChild(header);
+  wrap.appendChild(h('div', { class: 'quiz-question' }, q.text));
+
+  const counts = new Array(q.options.length).fill(0);
+  q.votes.forEach(v => { if (v.value >= 0 && v.value < counts.length) counts[v.value]++; });
+  const totalVotes = q.votes.length || 1;
+  const showStats = revealed || isPresenter;
+
+  const optionsWrap = h('div', { class: 'quiz-options' });
+
+  q.options.forEach((opt, i) => {
+    const isCorrect = i === q.correctIndex;
+    const isMine = mineVote && mineVote.value === i;
+    const isPicked = canInteract && hasPicked && pickedIdx === i;
+    const pct = Math.round(counts[i] / totalVotes * 100);
+    const classes = ['quiz-opt'];
+    if (revealed && isCorrect) classes.push('correct');
+    if (revealed && !isCorrect && counts[i] > 0) classes.push('wrong');
+    if (isMine) classes.push('mine');
+    if (isPicked) classes.push('picked');
+    if (canInteract) classes.push('pickable');
+
+    const optEl = h('div', { class: classes.join(' '), 'data-opt-idx': canInteract ? String(i) : null },
+      h('div', { class: 'opt-bar', style: { width: showStats ? pct + '%' : '0%' } }),
+      h('div', { class: 'opt-letter' }, h('span', {}, LETTERS[i])),
+      h('div', { class: 'opt-text' }, opt),
+      showStats ? h('div', { class: 'opt-count' }, counts[i] + (revealed ? ' · ' + pct + '%' : '')) : null);
+
+    if (canInteract) {
+      optEl.addEventListener('click', (ev) => {
+        ev.preventDefault(); ev.stopPropagation();
+        pickAnswer(q, i, optEl);
+      });
+    }
+    optionsWrap.appendChild(optEl);
+  });
+  wrap.appendChild(optionsWrap);
+
+  if (isParticipant && isActive && !mineVote) {
+    const row = h('div', { class: 'submit-row', 'data-submit-row': q.id });
+    const hint = h('div', { class: 'hint' });
+    if (hasPicked) {
+      hint.appendChild(document.createTextNode('Your pick: '));
+      hint.appendChild(h('b', {}, LETTERS[pickedIdx] + '. ' + q.options[pickedIdx]));
+    } else {
+      hint.textContent = '👆 Tap an option to select your answer';
+    }
+    row.appendChild(hint);
+    const submitBtn = btn('Submit answer', 'btn-primary btn-lg', () => {
+      const pick = ui.pickedAnswers[q.id];
+      if (pick === undefined) { toast('Pick an option first'); return; }
+      submitQuizAnswer(q, pick);
+    });
+    if (!hasPicked) submitBtn.disabled = true;
+    submitBtn.setAttribute('data-submit-btn', q.id);
+    row.appendChild(submitBtn);
+    wrap.appendChild(row);
+  }
+  if (isParticipant && isActive && mineVote) {
+    wrap.appendChild(h('div', { class: 'submit-row locked' },
+      h('div', { class: 'hint' },
+        '✓ Submitted: ', h('b', {}, LETTERS[mineVote.value] + '. ' + q.options[mineVote.value]),
+        ' — waiting for the timer…')));
+  }
+
+  if (isPresenter) {
+    const actions = h('div', { class: 'quiz-actions' });
+    const isCurrent = idx === state.quiz.currentIndex;
+    const canReveal = isActive && isCurrent;
+    const canNext = revealed && isCurrent;
+    const isLast = idx === state.quiz.questions.length - 1;
+    actions.appendChild(h('span', { class: 'participant-pill' },
+      'Correct: ', h('b', {}, LETTERS[q.correctIndex] + '. ' + q.options[q.correctIndex])));
+    actions.appendChild(h('span', { class: 'spacer' }));
+    if (canReveal) actions.appendChild(btn('👁 Reveal answer', 'btn-ok', () => revealQuestion(q)));
+    if (canNext) actions.appendChild(btn(isLast ? '🏁 Finish quiz' : 'Next question →', 'btn-primary', nextQuestion));
+    wrap.appendChild(actions);
+  }
+
+  if (revealed && !isPresenter) {
+    const correctText = LETTERS[q.correctIndex] + '. ' + q.options[q.correctIndex];
+    wrap.appendChild(h('div', { class: 'winner-card' },
+      h('div', { class: 'trophy' }, '✅'),
+      h('div', { class: 'w-info' },
+        h('div', { class: 'w-title' }, 'Correct answer'),
+        h('div', { class: 'w-name' }, correctText))));
+  }
+
+  if (revealed) {
+    const winner = fastestCorrect(q);
+    if (winner) {
+      wrap.appendChild(h('div', { class: 'winner-card' },
+        h('div', { class: 'trophy' }, '🏆'),
+        h('div', { class: 'w-info' },
+          h('div', { class: 'w-title' }, 'Fastest correct answer'),
+          h('div', { class: 'w-name' }, winner.name),
+          h('div', { class: 'w-stats' }, ((winner.timestamp - q.startedAt) / 1000).toFixed(1) + 's · Correct')),
+        h('div', { class: 'w-points' }, '+' + winner.score)));
+    } else {
+      wrap.appendChild(h('div', { class: 'winner-card', style: { background: '#F0F2F5', borderColor: '#D1D9E6' } },
+        h('div', { class: 'trophy' }, '🤷'),
+        h('div', { class: 'w-info' },
+          h('div', { class: 'w-title', style: { color: '#7A848F' } }, 'No correct answers'),
+          h('div', { class: 'w-name', style: { color: '#4A5561' } }, 'Better luck next time!'))));
+    }
+  }
+  return wrap;
+}
+
+function pickAnswer(q, idx, optEl) {
+  if (q.status !== 'active') return;
+  if (q.votes.find(v => v.voter === myId)) return;
+  ui.pickedAnswers[q.id] = idx;
+  const optionsWrap = optEl.parentElement;
+  if (optionsWrap) {
+    optionsWrap.querySelectorAll('.quiz-opt').forEach(el => {
+      const elIdx = Number(el.getAttribute('data-opt-idx'));
+      el.classList.toggle('picked', elIdx === idx);
+    });
+  }
+  const row = document.querySelector('[data-submit-row="' + q.id + '"]');
+  if (row) {
+    const hint = row.querySelector('.hint');
+    if (hint) {
+      hint.innerHTML = '';
+      hint.appendChild(document.createTextNode('Your pick: '));
+      const b = document.createElement('b');
+      b.textContent = LETTERS[idx] + '. ' + q.options[idx];
+      hint.appendChild(b);
+    }
+    const submitBtn = row.querySelector('[data-submit-btn]');
+    if (submitBtn) submitBtn.disabled = false;
+  }
+}
+
+/* ============================================================
+   LEADERBOARD PANEL (used by presenter/invite only)
+   ============================================================ */
+function renderLeaderboardPanel(title, limit) {
+  const lb = getLeaderboard();
+  const card = h('section', { class: 'panel pad' });
+  card.appendChild(h('div', { class: 'section-head' },
+    h('h2', {}, title || '🏅 Live Leaderboard'),
+    h('span', { class: 'pill' }, (lb.length || 0) + ' players')));
+  if (lb.length) {
+    const list = h('div', { class: 'lb' });
+    (limit ? lb.slice(0, limit) : lb).forEach((row, i) => {
+      list.appendChild(h('div', { class: 'lb-row' + (i === 0 ? ' top1' : '') + (row.voter === myId ? ' you' : '') },
+        h('div', { class: 'lb-rank' }, '#' + (i + 1)),
+        h('div', { class: 'lb-name' }, row.name + (row.voter === myId ? ' (you)' : '')),
+        h('div', { class: 'lb-correct' }, row.correct + ' correct'),
+        h('div', { class: 'lb-score' }, row.score.toLocaleString())));
+    });
+    card.appendChild(list);
+  } else {
+    card.appendChild(h('p', { class: 'empty' }, 'Scores will appear here as players answer.'));
+  }
+  return card;
+}
+
+/* ============================================================
+   DUCK POND (accepts custom min-height)
+   ============================================================ */
+function renderDuckPond(parts, minHeight) {
+  const pond = h('div', {
+    class: 'duck-pond',
+    style: minHeight ? { minHeight: minHeight + 'px' } : {}
+  });
+
+  if (!parts.length) {
+    pond.appendChild(h('div', { class: 'duck-empty' },
+      h('div', { class: 'big' }, '🦆'),
+      h('div', {}, 'No ducks in the pond yet'),
+      h('div', { class: 'sub' }, 'Names will appear as people scan.')));
+    return pond;
+  }
+
+  parts.forEach((p, i) => {
+    const top = 5 + Math.random() * 60;
+    const left = 4 + Math.random() * 62;
+    const dx = 30 + Math.random() * 70;
+    const dy = -20 + Math.random() * 20;
+    const dur = 9 + Math.random() * 7;
+    const delay = -Math.random() * 6;
+    const color = DUCK_COLORS[i % DUCK_COLORS.length];
+
+    pond.appendChild(h('div', {
+      class: 'duck',
+      style: {
+        top: top + '%',
+        left: left + '%',
+        '--dx': dx + 'px',
+        '--dy': dy + 'px',
+        '--dur': dur + 's',
+        '--delay': delay + 's',
+        '--color': color
+      }
+    },
+      h('div', { class: 'duck-body' }),
+      h('div', { class: 'duck-head' }),
+      h('div', { class: 'duck-eye' }),
+      h('div', { class: 'duck-beak' }),
+      h('div', { class: 'duck-label', title: p.name }, p.name || 'Anonymous')
+    ));
+  });
+
+  return pond;
+}
+
+/* ============================================================
+   PARTICIPANT QUIZ — ducks replace the leaderboard
+   ============================================================ */
+function participantQuiz() {
+  const wrap = h('div', { class: 'page narrow' });
+  const quiz = state.quiz;
+
+  /* 1. Join form */
+  if (!getParticipantName()) {
+    const join = h('section', { class: 'panel pad' });
+    join.appendChild(h('div', { class: 'join-hero' },
+      h('div', { class: 'icon' }, '👋'),
+      h('h1', {}, 'Welcome to the quiz'),
+      h('p', {}, 'Enter your name below so we can score your answers and add you to the leaderboard.'),
+      h('div', { class: 'room-chip' }, '🔑 Room ' + state.code)));
+    const input = h('input', { class: 'input', id: 'joinName', placeholder: 'Your name', maxlength: '24', autocomplete: 'off' });
+    const doJoin = () => {
+      const n = input.value.trim();
+      if (!n) { toast('Please enter a name'); return; }
+      setParticipantName(n);
+      render();
+      toast('Welcome, ' + n + '!');
+    };
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') doJoin(); });
+    join.appendChild(h('div', { class: 'ask-row', style: { marginTop: '18px' } }, input, btn('Join quiz', 'btn-primary', doJoin)));
+    wrap.appendChild(join);
+    return wrap;
+  }
+
+  /* 2. Player header */
+  const head = h('section', { class: 'panel pad' });
+  head.appendChild(h('div', { class: 'section-head' },
+    h('h2', {}, '🎯 ' + quiz.title),
+    h('span', { class: 'pill' + (quiz.status === 'running' ? '' : ' blue') }, quiz.status)));
+  head.appendChild(h('div', { class: 'quiz-meta', style: { gap: '18px' } },
+    h('div', {}, 'Player: ', h('b', {}, getParticipantName())),
+    h('div', {}, 'Questions: ', h('b', {}, quiz.questions.length))));
+  wrap.appendChild(head);
+
+  /* 3. Main content */
+  if (quiz.status === 'idle' || quiz.status === 'finished') {
+    const s = h('section', { class: 'panel pad' });
+    s.appendChild(h('div', { class: 'empty-state' },
+      h('div', { class: 'empty-icon' }, quiz.status === 'finished' ? '🏁' : '⏳'),
+      h('p', {}, quiz.status === 'finished' ? 'Quiz finished!' : 'Waiting for the host to start…'),
+      h('span', {}, quiz.status === 'finished'
+        ? 'Thanks for playing — see who else joined below.'
+        : 'Get ready — the first question is coming up.')));
+    wrap.appendChild(s);
+  } else {
+    const idx = quiz.currentIndex;
+    const q = quiz.questions[idx];
+    if (q) {
+      const card = h('section', { class: 'panel pad' });
+      card.appendChild(renderQuizQuestion(q, idx, 'participant'));
+      wrap.appendChild(card);
+    }
+  }
+
+  /* 4. Duck pond (replaces the leaderboard) */
+  const duckSection = h('section', { class: 'panel', style: { overflow: 'hidden' } });
+  duckSection.appendChild(h('div', {
+    style: {
+      display: 'flex', alignItems: 'center', gap: '10px',
+      padding: '16px 20px 12px', borderBottom: '1px solid var(--line)'
+    }
+  },
+    h('h2', { style: { fontSize: '16px', fontWeight: '800', color: 'var(--pc-blue)', margin: 0 } },
+      '🦆 Who\'s in the pond'),
+    h('span', { class: 'pill blue', style: { marginLeft: 'auto' } },
+      participantCount() + ' joined')));
+
+  const pondWrap = h('div', { style: { padding: '14px' } });
+  pondWrap.appendChild(renderDuckPond(participantList(), 300));
+  duckSection.appendChild(pondWrap);
+  wrap.appendChild(duckSection);
+
+  return wrap;
+}
+
+/* ============================================================
+   INVITE PAGE
+   ============================================================ */
+function renderInvitePage() {
+  document.body.classList.add('invite-mode');
+  const quiz = state.quiz;
+  const joinUrl = window.location.origin + window.location.pathname + '?room=' + encodeURIComponent(state.code);
+  const qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&bgcolor=ffffff&color=0033A0&data=' + encodeURIComponent(joinUrl);
+
+  const shell = h('div', { class: 'invite-shell' });
+  const isLive = quiz.status === 'running' || quiz.status === 'finished';
+
+  const top = h('div', { class: 'invite-topbar' });
+  const inner = h('div', { class: 'invite-topbar-inner' });
+  inner.appendChild(h('h1', {}, isLive ? '🎯 Live Quiz' : 'Invite participants'));
+  inner.appendChild(h('div', { class: 'pill blue' }, 'Room ' + state.code));
+  inner.appendChild(h('a', { class: 'close-x', href: 'javascript:window.close()', title: 'Close tab' }, '✕'));
+  top.appendChild(inner);
+  shell.appendChild(top);
+
+  const content = h('div', { class: 'invite-content' });
+
+  if (isLive) {
+    const chip = h('div', { class: 'invite-live-chip', title: 'Scan to join' },
+      h('img', { src: qrSrc, alt: 'QR' }),
+      h('div', { class: 'lbl' }, 'Scan to join'));
+    shell.appendChild(chip);
+
+    if (quiz.status === 'finished') {
+      const wrap = h('div', { style: { maxWidth: '820px', margin: '0 auto' } });
+      const sec = h('section', { class: 'panel pad' });
+      sec.appendChild(h('div', { class: 'empty-state' },
+        h('div', { class: 'empty-icon' }, '🏁'),
+        h('p', {}, 'Quiz complete!'),
+        h('span', {}, 'Final leaderboard below.')));
+      wrap.appendChild(sec);
+      wrap.appendChild(renderLeaderboardPanel('🏅 Final Standings'));
+      content.appendChild(wrap);
+    } else {
+      const idx = quiz.currentIndex;
+      const q = quiz.questions[idx];
+      const wrap = h('div', { style: { maxWidth: '820px', margin: '0 auto' } });
+
+      if (q) {
+        const card = h('section', { class: 'panel pad' });
+        const hasName = !!getParticipantName();
+        const qMode = hasName ? 'participant' : 'readonly';
+        card.appendChild(renderQuizQuestion(q, idx, qMode));
+        wrap.appendChild(card);
+      } else {
+        const card = h('section', { class: 'panel pad' });
+        card.appendChild(h('div', { class: 'empty-state' },
+          h('div', { class: 'empty-icon' }, '⏳'),
+          h('p', {}, 'Waiting for the next question…'),
+          h('span', {}, 'The host will launch it soon.')));
+        wrap.appendChild(card);
+      }
+
+      wrap.appendChild(renderLeaderboardPanel('🏅 Live Leaderboard', 10));
+      content.appendChild(wrap);
+    }
+    shell.appendChild(content);
+    return shell;
+  }
+
+  /* Idle: invite card with duck pond */
+  const card = h('div', { class: 'invite-card' });
+  const left = h('div', { class: 'invite-left' });
+  left.appendChild(h('div', { class: 'lbl' }, '📱 Scan to join'));
+  left.appendChild(h('div', { class: 'qr-box' }, h('img', { src: qrSrc, alt: 'QR code', draggable: 'false' })));
+  left.appendChild(h('div', { class: 'room-label', style: { marginTop: '14px' } }, 'Room Code'));
+  left.appendChild(h('div', { class: 'room-value' }, state.code));
+  left.appendChild(h('div', { class: 'url-label' }, 'Or share this link'));
+  left.appendChild(h('div', { class: 'url-box' }, joinUrl));
+  left.appendChild(h('div', { class: 'actions' },
+    btn('Copy link', 'btn-primary', async () => {
+      try { await navigator.clipboard.writeText(joinUrl); toast('Join link copied'); }
+      catch (e) { toast(joinUrl); }
+    }),
+    btn('Copy room code', 'btn-ghost', async () => {
+      try { await navigator.clipboard.writeText(state.code); toast('Room code copied'); }
+      catch (e) { toast(state.code); }
+    })));
+  card.appendChild(left);
+
+  const right = h('div', { class: 'invite-right' });
+  const parts = participantList();
+  right.appendChild(h('div', { class: 'head' },
+    h('h2', {}, '👥 Who joined'),
+    h('div', { class: 'count-pill' }, parts.length)));
+  right.appendChild(renderDuckPond(parts));
+  card.appendChild(right);
+  content.appendChild(card);
+  shell.appendChild(content);
+
+  shell.appendChild(h('div', { class: 'invite-foot' },
+    h('span', {}, '⚡ PC Express Pulse — Live Polls, Quiz & Q&A'),
+    h('span', { class: 'sp' }, 'Room ' + state.code)));
+
+  return shell;
+}
+
+/* ============================================================
+   DISPLAY (LED WALL)
+   ============================================================ */
+function renderDisplay() {
+  document.body.classList.add('display-mode');
+  const quiz = state.quiz;
+  const root = h('div', { class: 'display-root' });
+
+  const bar = h('div', { class: 'display-bar' });
+  bar.appendChild(h('div', { class: 'display-brand' },
+    h('div', { class: 'logo' }, logoSvg()),
+    h('div', { class: 'brand-text' }, 'PC ', h('span', {}, 'Express'), ' Pulse')));
+  bar.appendChild(h('div', { class: 'display-room' },
+    h('span', { class: 'lbl' }, 'Room'), h('span', { class: 'code' }, state.code)));
+  if (quiz.status === 'running') bar.appendChild(h('div', { class: 'display-live' }, 'Live'));
+  root.appendChild(bar);
+
+  const body = h('div', { class: 'display-body' });
+
+  if (quiz.status === 'idle' || !quiz.questions.length) {
+    body.classList.add('display-center');
+    body.appendChild(h('div', { class: 'display-eyebrow' }, 'PC Express Product Knowledge Quiz'));
+    body.appendChild(h('div', { class: 'display-wait-icon' }, '🎯'));
+    body.appendChild(h('h1', { class: 'display-h1' }, 'Get ready — the quiz begins soon'));
+    body.appendChild(h('p', { class: 'display-lead' },
+      'Scan the QR code on screen to join, then wait for the host to launch Question 1.'));
+    root.appendChild(body);
+    root.appendChild(h('div', { class: 'display-footer' },
+      h('span', {}, '📱 Scan QR to join'),
+      h('span', { class: 'sp' }, participantCount() + ' players joined')));
+    return root;
+  }
+
+  if (quiz.status === 'finished') {
+    const lb = getLeaderboard();
+    body.classList.add('display-center');
+    body.appendChild(h('div', { class: 'display-eyebrow' }, 'Quiz Complete'));
+    body.appendChild(h('div', { class: 'display-wait-icon' }, '🏁'));
+    body.appendChild(h('h1', { class: 'display-h1' }, 'Congratulations to our winners!'));
+    body.appendChild(h('p', { class: 'display-lead' }, 'Thanks to everyone who played. Here are the final standings.'));
+    if (lb.length) {
+      const top = h('div', { style: { width: '100%', maxWidth: '960px', marginTop: '16px' } });
+      const grid = h('div', { class: 'display-lb' });
+      lb.slice(0, 8).forEach((row, i) => {
+        grid.appendChild(h('div', { class: 'display-lb-row' + (i === 0 ? ' top1' : '') },
+          h('div', { class: 'display-lb-rank' }, '#' + (i + 1)),
+          h('div', { class: 'display-lb-name' }, row.name),
+          h('div', { class: 'display-lb-correct' }, row.correct + ' correct'),
+          h('div', { class: 'display-lb-score' }, row.score.toLocaleString())));
+      });
+      top.appendChild(grid);
+      body.appendChild(top);
+    }
+    root.appendChild(body);
+    return root;
+  }
+
+  const idx = quiz.currentIndex;
+  const q = quiz.questions[idx];
+  if (!q) { root.appendChild(body); return root; }
+
+  const total = quiz.questions.length;
+  const answered = q.votes.length;
+  const participants = Math.max(participantCount(), answered);
+  const revealed = q.status === 'revealed';
+  const counts = new Array(q.options.length).fill(0);
+  q.votes.forEach(v => { if (v.value >= 0 && v.value < counts.length) counts[v.value]++; });
+  const totalVotes = q.votes.length || 1;
+
+  const head = h('div', { class: 'display-qhead' });
+  head.appendChild(h('div', { class: 'display-qbadge' }, 'Question ' + (idx + 1) + ' of ' + total));
+  head.appendChild(h('div', { class: 'display-answered' },
+    h('span', { class: 'n' }, answered),
+    h('span', {}, 'of ' + participants + ' answered')));
+  if (q.status === 'active') {
+    const timer = h('div', { class: 'display-timer' });
+    const circumference = 2 * Math.PI * 40;
+    const initialPct = Math.max(0, (q.timeLimit - (Date.now() - q.startedAt) / 1000) / q.timeLimit);
+    timer.appendChild(h('div', { class: 'num', 'data-timer-num': q.id }, Math.ceil(q.timeLimit * initialPct)));
+    timer.appendChild(h('div', { class: 'ring' },
+      h('svg', { viewBox: '0 0 90 90' },
+        h('circle', { class: 'track', cx: '45', cy: '45', r: '40' }),
+        h('circle', { class: 'prog', cx: '45', cy: '45', r: '40',
+          'data-timer-ring': q.id,
+          style: { strokeDasharray: circumference, strokeDashoffset: circumference * (1 - initialPct) } }))));
+    head.appendChild(timer);
+  }
+  body.appendChild(head);
+  body.appendChild(h('div', { class: 'display-q' }, q.text));
+
+  const opts = h('div', { class: 'display-options' });
+  q.options.forEach((opt, i) => {
+    const isCorrect = i === q.correctIndex;
+    const pct = Math.round(counts[i] / totalVotes * 100);
+    const classes = ['display-opt'];
+    if (revealed && isCorrect) classes.push('correct', 'winner');
+    if (revealed && !isCorrect && counts[i] > 0) classes.push('wrong');
+    opts.appendChild(h('div', { class: classes.join(' ') },
+      h('div', { class: 'fill', style: { width: (revealed || q.status === 'active' ? pct + '%' : '0%') } }),
+      h('div', { class: 'ltr' }, LETTERS[i]),
+      h('div', { class: 'txt' }, opt),
+      h('div', { class: 'cnt' }, counts[i]),
+      h('div', { class: 'pct' }, pct + '%')));
+  });
+  body.appendChild(opts);
+
+  if (revealed) {
+    const winner = fastestCorrect(q);
+    if (winner) {
+      body.appendChild(h('div', { class: 'display-winner' },
+        h('div', { class: 'tr' }, '🏆'),
+        h('div', { class: 'info' },
+          h('div', { class: 'lbl' }, 'Fastest correct answer'),
+          h('div', { class: 'name' }, winner.name),
+          h('div', { class: 'sub' }, ((winner.timestamp - q.startedAt) / 1000).toFixed(1) + 's · Correct')),
+        h('div', { class: 'pts' }, '+' + winner.score)));
+    }
+    const lb = getLeaderboard();
+    if (lb.length) {
+      const grid = h('div', { class: 'display-lb' });
+      lb.slice(0, 6).forEach((row, i) => {
+        grid.appendChild(h('div', { class: 'display-lb-row' + (i === 0 ? ' top1' : '') },
+          h('div', { class: 'display-lb-rank' }, '#' + (i + 1)),
+          h('div', { class: 'display-lb-name' }, row.name),
+          h('div', { class: 'display-lb-correct' }, row.correct + ' correct'),
+          h('div', { class: 'display-lb-score' }, row.score.toLocaleString())));
+      });
+      body.appendChild(grid);
+    }
+  }
+
+  root.appendChild(body);
+  root.appendChild(h('div', { class: 'display-footer' },
+    h('span', {}, '⚡ Powered by PC Express Pulse'),
+    h('span', { class: 'sp' }, 'Room ' + state.code)));
+  return root;
+}
+
+/* ============================================================
+   Q&A
+   ============================================================ */
+function qaSection(isPresenter) {
+  const sec = h('section', { class: 'panel pad' });
+  sec.appendChild(h('div', { class: 'section-head' },
+    h('h2', {}, isPresenter ? 'Audience Questions' : 'Q&A'),
+    h('span', { class: 'pill' }, state.questions.filter(q => !q.answered).length + ' open')));
+  if (!isPresenter) {
+    const input = h('input', { class: 'input', id: 'qaInput', placeholder: 'Ask a question…', maxlength: '140' });
+    const send = () => { const t = input.value.trim(); if (!t) return; ask(t); input.value = ''; };
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+    sec.appendChild(h('div', { class: 'ask-row' }, input, btn('Ask', 'btn-primary', send)));
+  }
+  const list = h('div', { class: 'qa-list' });
+  const qs = [...state.questions].sort((a, b) => {
+    if (a.answered !== b.answered) return a.answered ? 1 : -1;
+    return b.votes.length - a.votes.length;
+  });
+  if (!qs.length) list.appendChild(h('p', { class: 'empty' }, isPresenter ? 'No questions yet.' : 'No questions yet — be the first!'));
+  qs.forEach(q => list.appendChild(qaItem(q, isPresenter)));
+  sec.appendChild(list);
+  return sec;
+}
+
+function qaItem(q, isPresenter) {
+  const voted = q.votes.includes(myId);
+  const item = h('div', { class: 'qa-item' + (q.answered ? ' answered' : '') });
+  item.appendChild(h('button', { class: 'upvote' + (voted ? ' voted' : ''), onclick: () => toggleUpvote(q) },
+    h('span', { class: 'caret' }, '▲'), h('span', {}, q.votes.length)));
+  item.appendChild(h('div', { class: 'qa-body' },
+    h('div', { class: 'qa-text' }, q.text),
+    h('div', { class: 'qa-meta' }, q.answered ? 'Answered' : 'Open · ' + q.votes.length + ' upvotes')));
+  if (isPresenter) {
+    item.appendChild(h('div', { class: 'qa-acts' },
+      h('button', { class: 'icon-btn', title: 'Toggle answered', onclick: () => { q.answered = !q.answered; save(); render(); } }, q.answered ? '↺' : '✓'),
+      h('button', { class: 'icon-btn danger', title: 'Delete', onclick: () => {
+        state.questions = state.questions.filter(x => x.id !== q.id); save(); render();
+      }}, '✕')));
+  }
+  return item;
+}
+
+/* ============================================================
+   POLL COMPOSER
+   ============================================================ */
+function openComposer() { composer = { type: 'multiple_choice', question: '', options: ['', ''] }; render(); }
+function closeComposer() { composer = null; render(); }
+
+function renderComposer() {
+  const c = composer;
+  const root = h('div', { class: 'overlay', onclick: e => { if (e.target === root) closeComposer(); } });
+  const card = h('div', { class: 'modal' });
+  card.appendChild(h('div', { class: 'modal-head' }, h('h2', {}, 'Create a poll'), h('button', { class: 'icon-btn', onclick: closeComposer }, '✕')));
+  const body = h('div', { class: 'modal-body' });
+  body.appendChild(h('label', { class: 'field' }, h('span', {}, 'Question'),
+    h('input', { class: 'input', id: 'composerQ', placeholder: 'What do you want to ask?', value: c.question, maxlength: '160', oninput: e => { c.question = e.target.value; } })));
+  const chips = h('div', { class: 'chips' });
+  Object.entries(TYPE_LABEL).forEach(([val, label]) => {
+    chips.appendChild(h('button', { class: 'chip' + (c.type === val ? ' active' : ''), onclick: () => { c.type = val; render(); } }, label));
+  });
+  body.appendChild(h('div', { class: 'field' }, h('span', {}, 'Type'), chips));
+  if (c.type === 'multiple_choice') {
+    const wrap = h('div', { class: 'field' }, h('span', {}, 'Answer options'));
+    c.options.forEach((o, i) => {
+      const row = h('div', { class: 'opt-row' });
+      row.appendChild(h('input', { class: 'input', value: o, placeholder: 'Option ' + (i + 1), maxlength: '80', oninput: e => { c.options[i] = e.target.value; } }));
+      if (c.options.length > 2) row.appendChild(h('button', { class: 'icon-btn danger', onclick: () => { c.options.splice(i, 1); render(); } }, '✕'));
+      wrap.appendChild(row);
+    });
+    if (c.options.length < 6) wrap.appendChild(h('button', { class: 'btn btn-ghost btn-sm', style: { alignSelf: 'flex-start' }, onclick: () => { c.options.push(''); render(); } }, '+ Add option'));
+    body.appendChild(wrap);
+  }
+  body.appendChild(h('div', { class: 'modal-foot' }, btn('Cancel', 'btn-ghost', closeComposer), btn('Create poll', 'btn-primary', saveComposer)));
+  card.appendChild(body); root.appendChild(card); return root;
+}
+
+function saveComposer() {
+  const c = composer;
+  const q = c.question.trim();
+  if (!q) { toast('Please enter a question'); return; }
+  let options = [];
+  if (c.type === 'multiple_choice') {
+    options = c.options.map(o => o.trim()).filter(Boolean);
+    if (options.length < 2) { toast('Add at least 2 options'); return; }
+  }
+  state.polls.push({ id: 'p' + Date.now(), type: c.type, question: q, options, status: 'draft', votes: [] });
+  composer = null; save(); render(); toast('Poll created');
+}
+
+function openInviteTab() {
+  const inviteUrl = window.location.origin + window.location.pathname + '?room=' + encodeURIComponent(state.code) + '&invite=1';
+  window.open(inviteUrl, '_blank', 'noopener');
+}
+
+/* ============================================================
+   SUBNAV
+   ============================================================ */
+function renderSubnav() {
+  const activeQuiz = state.quiz.status === 'running';
+  const navBar = h('nav', { class: 'subnav' });
+  [{ id: 'polls', label: '📊 Polls' },
+   { id: 'quiz', label: '🎯 Quiz', dot: activeQuiz },
+   { id: 'qa', label: '💬 Q&A' }].forEach(item => {
+    const b = h('button', {
+      class: nav === item.id ? 'active' : '',
+      onclick: () => { nav = item.id; sessionStorage.setItem('pcx.pulse.nav', nav); render(); }
+    }, item.label);
+    if (item.dot) b.appendChild(h('span', { class: 'dot' }));
+    navBar.appendChild(b);
+  });
+  return navBar;
+}
+
+const app = document.getElementById('app');
+const modalRoot = document.getElementById('modalRoot');
+
+let nav = sessionStorage.getItem('pcx.pulse.nav') || 'polls';
+const ui = { selectedPollId: null, selectedQuizIndex: 0, pickedAnswers: {} };
+let composer = null;
+if (roleLocked && role === 'participant') nav = 'quiz';
+
+function render() {
+  const active = document.activeElement;
+  const focusId = active && active.id ? active.id : null;
+  const selStart = active && typeof active.selectionStart === 'number' ? active.selectionStart : null;
+  const needFocus = !(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA'));
+
+  if (!supabaseReady) {
+    document.body.classList.remove('display-mode', 'invite-mode');
+    app.innerHTML = '';
+    app.appendChild(h('div', { class: 'loading-state' },
+      h('div', { class: 'spinner' }),
+      h('p', {}, 'Connecting to the quiz…'),
+      h('span', {}, 'Setting up realtime sync')));
+    return;
+  }
+
+  if (role === 'invite') {
+    document.body.classList.add('invite-mode');
+    document.body.classList.remove('display-mode');
+    app.innerHTML = '';
+    app.appendChild(renderInvitePage());
+    modalRoot.innerHTML = '';
+    return;
+  }
+  document.body.classList.remove('invite-mode');
+
+  if (role === 'display') {
+    document.body.classList.add('display-mode');
+    app.innerHTML = '';
+    app.appendChild(renderDisplay());
+    modalRoot.innerHTML = '';
+    return;
+  }
+  document.body.classList.remove('display-mode');
+
+  const seg = document.getElementById('roleSeg');
+  const lock = document.getElementById('lockBadge');
+  if (roleLocked) {
+    seg.style.display = 'none';
+    lock.style.display = 'inline-flex';
+    lock.textContent = role === 'participant' ? '🔒 Participant' : '🔒 Presenter';
+  } else {
+    seg.style.display = 'flex';
+    lock.style.display = 'none';
+    document.querySelectorAll('#roleSeg button').forEach(b => b.classList.toggle('active', b.dataset.role === role));
+  }
+  document.getElementById('roomCodeBtn').textContent = state.code;
+
+  /* PARTICIPANT: only show the Quiz, hide Polls & Q&A */
+  if (role === 'participant') {
+    app.innerHTML = '';
+    app.appendChild(participantQuiz());
+    modalRoot.innerHTML = '';
+    if (focusId && !needFocus) {
+      const el = document.getElementById(focusId);
+      if (el) {
+        el.focus();
+        if (selStart !== null && el.setSelectionRange) {
+          try { el.setSelectionRange(selStart, selStart); } catch (e) {}
+        }
+      }
+    }
+    return;
+  }
+
+  /* PRESENTER: full subnav */
+  if (state.quiz.status === 'running' && nav !== 'quiz') nav = 'quiz';
+
+  app.innerHTML = '';
+  app.appendChild(renderSubnav());
+
+  if (nav === 'polls') app.appendChild(presenterPolls());
+  else if (nav === 'quiz') app.appendChild(presenterQuiz());
+  else {
+    const wrap = h('div', { class: 'page narrow' });
+    wrap.appendChild(qaSection(true));
+    app.appendChild(wrap);
+  }
+
+  modalRoot.innerHTML = '';
+  if (composer) modalRoot.appendChild(renderComposer());
+
+  if (focusId && !needFocus) {
+    const el = document.getElementById(focusId);
+    if (el) {
+      el.focus();
+      if (selStart !== null && el.setSelectionRange) {
+        try { el.setSelectionRange(selStart, selStart); } catch (e) {}
+      }
+    }
+  }
+}
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+document.getElementById('roleSeg').addEventListener('click', e => {
+  if (roleLocked) return;
+  const b = e.target.closest('button[data-role]');
+  if (!b) return;
+  role = b.dataset.role;
+  sessionStorage.setItem('pcx.pulse.role', role);
+  ui.selectedPollId = null;
+  render();
+});
+
+document.getElementById('roomCodeBtn').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(state.code); toast('Room code copied'); }
+  catch (e) { toast('Room code: ' + state.code); }
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+render();
+ensureTimerLoop();
+initSupabase();
+</script>
+</body>
+</html>
